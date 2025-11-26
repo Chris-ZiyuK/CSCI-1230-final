@@ -1,0 +1,83 @@
+# ninja log v6
+62	1108	1763267878663837845	CMakeFiles/projects_realtime.dir/src/utils/scenefilereader.cpp.o	5c8b37583d96aee9
+77	328	1763094122565751262	CMakeFiles/StaticGLEW.dir/glew/src/glew.c.o	1656710919135773
+19	30	1763094122441013977	clean	8d7332d778950668
+582	1727	1763266837001624799	CMakeFiles/projects_realtime.dir/projects_realtime_autogen/mocs_compilation.cpp.o	1cc5ef9ff5468a64
+583	1891	1763266837002039302	CMakeFiles/projects_realtime.dir/src/realtime.cpp.o	fed341d5413f1365
+583	1836	1763266837002175386	CMakeFiles/projects_realtime.dir/src/mainwindow.cpp.o	2190fa438a688c72
+584	736	1763266837003243725	CMakeFiles/projects_realtime.dir/src/camera.cpp.o	5a9fedbe5d798fb2
+62	89	1763267878664058095	CMakeFiles/projects_realtime.dir/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp.o	1ab7968699ea0658
+548	818	1763266639419009038	CMakeFiles/projects_realtime.dir/src/settings.cpp.o	be583c82bf32204b
+583	1714	1763266837001886467	CMakeFiles/projects_realtime.dir/src/main.cpp.o	4a4cd1f5af075b2a
+25	76	1763094122558298413	StaticGLEW_autogen/mocs_compilation.cpp	b5d1b55bf5dd4134
+1108	1205	1763267879709937366	projects_realtime	50bcf8a18ee580a2
+52	1009	1763267442844096689	CMakeFiles/projects_realtime.dir/src/utils/sceneparser.cpp.o	584980202975dbd1
+3	19	1763094122424913706	CMakeFiles/clean.additional	e812091609bbcf32
+49	62	1763267878663014554	.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+25	76	1763094122558298413	StaticGLEW_autogen/timestamp	b5d1b55bf5dd4134
+328	368	1763094122817555523	libStaticGLEW.a	f30d9911eb726192
+11	48	1763267878612340209	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+11	48	1763267878612340209	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+25	76	1763094122558298413	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/timestamp	b5d1b55bf5dd4134
+76	97	1763094122565574431	CMakeFiles/StaticGLEW.dir/StaticGLEW_autogen/mocs_compilation.cpp.o	14ab3f78335eaa55
+63	441	1763242752464031236	CMakeFiles/projects_realtime.dir/src/shapes/Cone.cpp.o	60dcd86661c1f861
+49	62	1763267878663014554	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+97	499	1763151010582324982	CMakeFiles/projects_realtime.dir/src/shapes/Cylinder.cpp.o	b76e0d5c0315e34e
+944	1445	1763094123432931968	CMakeFiles/projects_realtime.dir/src/shapes/Cube.cpp.o	ca0bfe8118ac13fb
+25	76	1763094122558298413	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/mocs_compilation.cpp	b5d1b55bf5dd4134
+944	1499	1763094123433061217	CMakeFiles/projects_realtime.dir/src/shapes/Sphere.cpp.o	ed940960a113337c
+11	48	1763267878612340209	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+11	48	1763267878612340209	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+9	49	1763267983105478089	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+9	49	1763267983105478089	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+9	49	1763267983105478089	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+9	49	1763267983105478089	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+49	62	1763267983158110808	.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+49	62	1763267983158110808	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+63	92	1763267983159327058	CMakeFiles/projects_realtime.dir/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp.o	1ab7968699ea0658
+63	982	1763267983159180391	CMakeFiles/projects_realtime.dir/src/utils/sceneparser.cpp.o	584980202975dbd1
+62	1189	1763267983158938474	CMakeFiles/projects_realtime.dir/src/utils/scenefilereader.cpp.o	5c8b37583d96aee9
+1189	1297	1763267984285856324	projects_realtime	50bcf8a18ee580a2
+10	24	1763268188355452259	.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+10	24	1763268188355452259	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+24	51	1763268188356313425	CMakeFiles/projects_realtime.dir/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp.o	1ab7968699ea0658
+51	154	1763268188383677701	projects_realtime	50bcf8a18ee580a2
+10	60	1763268365116383596	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+10	60	1763268365116383596	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+10	60	1763268365116383596	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+10	60	1763268365116383596	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+61	944	1763268365167044400	CMakeFiles/projects_realtime.dir/src/utils/sceneparser.cpp.o	584980202975dbd1
+945	1048	1763268366050925681	projects_realtime	50bcf8a18ee580a2
+13	53	1763268385317904175	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+13	53	1763268385317904175	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+13	53	1763268385317904175	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+13	53	1763268385317904175	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+54	66	1763268385370965270	.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+54	66	1763268385370965270	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+67	94	1763268385372010477	CMakeFiles/projects_realtime.dir/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp.o	1ab7968699ea0658
+66	980	1763268385371759103	CMakeFiles/projects_realtime.dir/src/utils/sceneparser.cpp.o	584980202975dbd1
+980	1086	1763268386285451491	projects_realtime	50bcf8a18ee580a2
+18	560	1763268863286863000	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+18	560	1763268863286863000	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+18	560	1763268863286863000	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+18	560	1763268863286863000	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+561	685	1763268863299665445	CMakeFiles/projects_realtime.dir/src/camera.cpp.o	5a9fedbe5d798fb2
+560	1583	1763268863299345528	CMakeFiles/projects_realtime.dir/src/main.cpp.o	4a4cd1f5af075b2a
+560	1596	1763268863299176570	CMakeFiles/projects_realtime.dir/projects_realtime_autogen/mocs_compilation.cpp.o	1cc5ef9ff5468a64
+560	1693	1763268863299559362	CMakeFiles/projects_realtime.dir/src/mainwindow.cpp.o	2190fa438a688c72
+560	1760	1763268863299455112	CMakeFiles/projects_realtime.dir/src/realtime.cpp.o	fed341d5413f1365
+1760	1860	1763268864499142002	projects_realtime	50bcf8a18ee580a2
+14	540	1764006781002959000	projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+14	540	1764006781002959000	projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+14	540	1764006781002959000	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/timestamp	4c53ab3bcfb85089
+14	540	1764006781002959000	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp	4c53ab3bcfb85089
+541	663	1764006781015777185	CMakeFiles/projects_realtime.dir/src/camera.cpp.o	5a9fedbe5d798fb2
+541	1521	1764006781015459771	CMakeFiles/projects_realtime.dir/src/main.cpp.o	4a4cd1f5af075b2a
+541	1535	1764006781015263980	CMakeFiles/projects_realtime.dir/projects_realtime_autogen/mocs_compilation.cpp.o	1cc5ef9ff5468a64
+541	1632	1764006781015672811	CMakeFiles/projects_realtime.dir/src/mainwindow.cpp.o	2190fa438a688c72
+541	1678	1764006781015571812	CMakeFiles/projects_realtime.dir/src/realtime.cpp.o	fed341d5413f1365
+1679	1784	1764006782153049883	projects_realtime	50bcf8a18ee580a2
+43	88	1764021647135904703	.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+43	88	1764021647135904703	/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp	42b3641d0deab707
+88	120	1764021647136680907	CMakeFiles/projects_realtime.dir/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp.o	1ab7968699ea0658
+120	240	1764021647168560890	projects_realtime	50bcf8a18ee580a2
