@@ -6,6 +6,10 @@ void Camera::setCameraData(glm::vec4 pos, glm::vec4 look, glm::vec4 up, float he
     m_look = glm::normalize(glm::vec3(look));
     m_up   = glm::normalize(glm::vec3(up));
     m_heightAngle = heightAngle;
+
+    // === Fix values just for our projet 7 ===
+    m_near = 0.1f;
+    m_far  = 1000.0f;
 }
 
 void Camera::setAspectRatio(float aspect) {
