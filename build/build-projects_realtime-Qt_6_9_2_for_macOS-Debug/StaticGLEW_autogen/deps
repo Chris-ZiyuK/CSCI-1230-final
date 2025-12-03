@@ -1,11 +1,11 @@
 StaticGLEW_autogen/timestamp: \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/CMakeLists.txt \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/maintenance_tool_provider.cmake \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCCompiler.cmake \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeSystem.cmake \
-	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/glew/src/glew.c \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/CMakeLists.txt \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/maintenance_tool_provider.cmake \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCCompiler.cmake \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeSystem.cmake \
+	/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/glew/src/glew.c \
 	/Users/qianyun/Qt/6.9.2/macos/lib/cmake/Qt6/FindWrapAtomic.cmake \
 	/Users/qianyun/Qt/6.9.2/macos/lib/cmake/Qt6/FindWrapOpenGL.cmake \
 	/Users/qianyun/Qt/6.9.2/macos/lib/cmake/Qt6/Qt6Config.cmake \

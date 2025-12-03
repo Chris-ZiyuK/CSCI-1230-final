@@ -1,19 +1,19 @@
 {
-	"BUILD_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen",
-	"CMAKE_BINARY_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
-	"CMAKE_CURRENT_BINARY_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
-	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz",
+	"BUILD_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen",
+	"CMAKE_BINARY_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz",
 	"CMAKE_EXECUTABLE" : "/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/bin/cmake",
 	"CMAKE_LIST_FILES" : 
 	[
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/CMakeLists.txt",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeSystem.cmake",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/maintenance_tool_provider.cmake",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/CMakeLists.txt",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeSystem.cmake",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qtc/package-manager/maintenance_tool_provider.cmake",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Darwin-Initialize.cmake",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCCompiler.cmake",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCCompiler.cmake",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeGenericSystem.cmake",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake",
@@ -611,14 +611,14 @@
 		"/Users/qianyun/Qt/6.9.2/macos/lib/cmake/Qt6/Qt6Dependencies.cmake",
 		"/Users/qianyun/Qt/6.9.2/macos/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in"
 	],
-	"CMAKE_SOURCE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz",
+	"CMAKE_SOURCE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz",
 	"CROSS_CONFIG" : false,
-	"DEP_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/deps",
+	"DEP_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/deps",
 	"DEP_FILE_RULE_NAME" : "StaticGLEW_autogen/timestamp",
 	"HEADERS" : [],
 	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
-	"INCLUDE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/include",
-	"MOC_COMPILATION_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/mocs_compilation.cpp",
+	"INCLUDE_DIR" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/include",
+	"MOC_COMPILATION_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/mocs_compilation.cpp",
 	"MOC_DEFINITIONS" : [],
 	"MOC_DEPEND_FILTERS" : 
 	[
@@ -629,12 +629,12 @@
 	],
 	"MOC_INCLUDES" : 
 	[
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/src",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/projects_realtime",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/PRIVATE",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/glew/include",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/src",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/projects_realtime",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/PRIVATE",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/glew/include",
 		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/usr/include/c++/v1",
 		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include",
 		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/usr/include",
@@ -660,25 +660,25 @@
 		"-c",
 		"/Users/qianyun/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp"
 	],
-	"MOC_PREDEFS_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/moc_predefs.h",
+	"MOC_PREDEFS_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/StaticGLEW_autogen/moc_predefs.h",
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : 
 	[
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp"
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp"
 	],
 	"MULTI_CONFIG" : false,
 	"PARALLEL" : 12,
-	"PARSE_CACHE_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/StaticGLEW_autogen.dir/ParseCache.txt",
+	"PARSE_CACHE_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/StaticGLEW_autogen.dir/ParseCache.txt",
 	"QT_MOC_EXECUTABLE" : "/Users/qianyun/Qt/6.9.2/macos/libexec/moc",
 	"QT_UIC_EXECUTABLE" : "/Users/qianyun/Qt/6.9.2/macos/libexec/uic",
 	"QT_VERSION_MAJOR" : 6,
 	"QT_VERSION_MINOR" : 9,
-	"SETTINGS_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/StaticGLEW_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE" : "/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/CMakeFiles/StaticGLEW_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
 		[
-			"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/glew/src/glew.c",
+			"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/glew/src/glew.c",
 			"MU",
 			null
 		]
@@ -687,8 +687,8 @@
 	"UIC_SEARCH_PATHS" : [],
 	"UIC_SKIP" : 
 	[
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp",
-		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp"
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/.qt/rcc/qrc_Resources.cpp",
+		"/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/mocs_compilation.cpp"
 	],
 	"UIC_UI_FILES" : [],
 	"USE_BETTER_GRAPH" : true,

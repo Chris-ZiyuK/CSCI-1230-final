@@ -1,7 +1,13 @@
 <RCC>
   <qresource prefix="/">
-    <file alias="resources/shaders/default.frag">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/resources/shaders/default.frag</file>
-    <file alias="resources/shaders/default.vert">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/resources/shaders/default.vert</file>
+    <file alias="resources/shaders/default.frag">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/default.frag</file>
+    <file alias="resources/shaders/default.vert">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/default.vert</file>
+    <file alias="resources/shaders/bright.frag">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/bright.frag</file>
+    <file alias="resources/shaders/fullscreen_quad.vert">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/fullscreen_quad.vert</file>
+    <file alias="resources/shaders/screen.frag">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/screen.frag</file>
+    <file alias="resources/shaders/blur.frag">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/shaders/blur.frag</file>
+    <file alias="resources/textures/background.png">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/textures/background.png</file>
+    <file alias="resources/textures/bg.png">/Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/resources/textures/bg.png</file>
   </qresource>
 </RCC>
 

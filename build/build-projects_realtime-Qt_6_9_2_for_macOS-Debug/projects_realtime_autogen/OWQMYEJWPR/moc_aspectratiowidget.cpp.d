@@ -1,5 +1,5 @@
-/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/OWQMYEJWPR/moc_aspectratiowidget.cpp: /Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/src/utils/aspectratiowidget/aspectratiowidget.hpp \
-  /Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/proj5-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/moc_predefs.h \
+/Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/OWQMYEJWPR/moc_aspectratiowidget.cpp: /Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/src/utils/aspectratiowidget/aspectratiowidget.hpp \
+  /Users/qianyun/Desktop/CSCI\ 1230\ Computer\ Graphics/project-6-final-project-gear-up-GQYzzzz/build/build-projects_realtime-Qt_6_9_2_for_macOS-Debug/projects_realtime_autogen/moc_predefs.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h \

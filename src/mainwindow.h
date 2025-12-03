@@ -19,8 +19,8 @@ public:
 
 private:
     void connectUIElements();
-    void connectParam1();
-    void connectParam2();
+    void connectBloomControls();
+    void connectScrollControls();
     void connectNear();
     void connectFar();
 
@@ -39,10 +39,10 @@ private:
 
     QPushButton *uploadFile;
     QPushButton *saveImage;
-    QSlider *p1Slider;
-    QSlider *p2Slider;
-    QSpinBox *p1Box;
-    QSpinBox *p2Box;
+    QSlider *bloomSlider;
+    QSlider *scrollSlider;
+    QDoubleSpinBox *bloomBox;
+    QDoubleSpinBox *scrollBox;
     QSlider *nearSlider;
     QSlider *farSlider;
     QDoubleSpinBox *nearBox;
@@ -55,8 +55,10 @@ private slots:
 
     void onUploadFile();
     void onSaveImage();
-    void onValChangeP1(int newValue);
-    void onValChangeP2(int newValue);
+    void onBloomSliderChanged(int value);
+    void onBloomBoxChanged(double value);
+    void onScrollSliderChanged(int value);
+    void onScrollBoxChanged(double value);
     void onValChangeNearSlider(int newValue);
     void onValChangeFarSlider(int newValue);
     void onValChangeNearBox(double newValue);

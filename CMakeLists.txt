@@ -46,13 +46,17 @@ add_executable(${PROJECT_NAME}
     src/shapes/Sphere.cpp
     src/shapes/Cone.cpp
     src/shapes/Cylinder.cpp
+    src/shapes/Star.cpp
 
     src/shapes/Cube.h
     src/shapes/Sphere.h
     src/shapes/Cone.h
     src/shapes/Cylinder.h
+    src/shapes/Star.h
     src/camera.h
     src/camera.cpp
+    src/defaultscene.h
+    src/defaultscene.cpp
 )
 
 # GLM: this creates its library and allows you to `#include "glm/..."`
@@ -60,6 +64,7 @@ add_subdirectory(glm)
 
 # GLEW: this creates its library and allows you to `#include "GL/glew.h"`
 add_library(StaticGLEW STATIC glew/src/glew.c
+
 )
 include_directories(${PROJECT_NAME} PRIVATE glew/include)
 
@@ -80,6 +85,12 @@ qt6_add_resources(${PROJECT_NAME} "Resources"
     FILES
         resources/shaders/default.frag
         resources/shaders/default.vert
+        resources/shaders/bright.frag
+        resources/shaders/fullscreen_quad.vert
+        resources/shaders/screen.frag
+        resources/shaders/blur.frag
+        resources/textures/background.png
+        resources/textures/bg.png
 )
 
 # GLEW: this provides support for Windows (including 64-bit)

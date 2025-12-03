@@ -3,11 +3,14 @@
 #include <QCoreApplication>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QImage>
 #include <iostream>
 #include "settings.h"
 #include "utils/shaderloader.h"
 #include "camera.h"
 #include "utils/sceneparser.h"
+#include <cmath>
+#include "DefaultScene.h"
 
 
 // ================== Rendering the Scene!
@@ -29,6 +32,32 @@ Realtime::Realtime(QWidget *parent)
     // If you must use this function, do not edit anything above this
 }
 
+namespace {
+GLuint loadTextureFromResource(const QString &path) {
+    QImage image(path);
+    if (image.isNull()) {
+        std::cerr << "[Texture] Failed to load: " << path.toStdString() << std::endl;
+        return 0;
+    }
+
+    QImage glImage = image.convertToFormat(QImage::Format_RGBA8888).mirrored();
+
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(),
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.constBits());
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+}
+
 void Realtime::finish() {
     killTimer(m_timer);
     this->makeCurrent();
@@ -37,6 +66,10 @@ void Realtime::finish() {
     glDeleteBuffers(1, &m_vbo);
     glDeleteVertexArrays(1, &m_vao);
     glDeleteProgram(m_shader);
+    if (m_backgroundTex) {
+        glDeleteTextures(1, &m_backgroundTex);
+        m_backgroundTex = 0;
+    }
 
     this->doneCurrent();
 }
@@ -69,14 +102,177 @@ void Realtime::initializeGL() {
         ":/resources/shaders/default.frag"
         );
 
+    m_brightShader = ShaderLoader::createShaderProgram(
+        ":/resources/shaders/fullscreen_quad.vert",
+        ":/resources/shaders/bright.frag"
+        );
+
+    m_screenShader = ShaderLoader::createShaderProgram(
+        ":/resources/shaders/fullscreen_quad.vert",
+        ":/resources/shaders/screen.frag"
+        );
+
+    m_blurShader = ShaderLoader::createShaderProgram(
+        ":/resources/shaders/fullscreen_quad.vert",
+        ":/resources/shaders/blur.frag"
+        );
+
+    // ======================
+    // NEW: Create Scene FBO
+    // ======================
+    int w = width() * m_devicePixelRatio;
+    int h = height() * m_devicePixelRatio;
+
+    // 1) Create FBO
+    glGenFramebuffers(1, &m_sceneFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFBO);
+
+    // 2) Color Texture
+    glGenTextures(1, &m_sceneColorTex);
+    glBindTexture(GL_TEXTURE_2D, m_sceneColorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0,
+                 GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, m_sceneColorTex, 0);
+    GLenum attachments[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
+    // 3) Depth buffer
+    glGenRenderbuffers(1, &m_sceneDepthRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                              GL_RENDERBUFFER, m_sceneDepthRBO);
+
+    // Check
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Scene FBO is NOT complete!" << std::endl;
+    }
+
+    // unbind
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // ============================
+    // NEW: Bright-pass FBO
+    // ============================
+    glGenFramebuffers(1, &m_brightFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_brightFBO);
+
+    // bright texture
+    glGenTextures(1, &m_brightTex);
+    glBindTexture(GL_TEXTURE_2D, m_brightTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                 GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, m_brightTex, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "Bright FBO NOT complete!\n";
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // ============================
+    // NEW: Blur FBOs (ping-pong)
+    // ============================
+    glGenFramebuffers(1, &m_pingFBO);
+    glGenFramebuffers(1, &m_pongFBO);
+
+    glGenTextures(1, &m_pingTex);
+    glGenTextures(1, &m_pongTex);
+
+    GLuint blurTextures[2] = { m_pingTex, m_pongTex };
+    GLuint blurFBOs[2] = { m_pingFBO, m_pongFBO };
+
+    for (int i = 0; i < 2; i++) {
+        glBindTexture(GL_TEXTURE_2D, blurTextures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, blurFBOs[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, blurTextures[i], 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "Blur FBO " << i << " NOT complete!\n";
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    // ============================
+    // NEW: Fullscreen Quad
+    // ============================
+    float quadVertices[] = {
+        // positions   // texcoords
+        -1.0, -1.0,     0.0, 0.0,
+        1.0, -1.0,     1.0, 0.0,
+        1.0,  1.0,     1.0, 1.0,
+
+        -1.0, -1.0,     0.0, 0.0,
+        1.0,  1.0,     1.0, 1.0,
+        -1.0,  1.0,     0.0, 1.0
+    };
+
+    glGenVertexArrays(1, &m_quadVAO);
+    glGenBuffers(1, &m_quadVBO);
+
+    glBindVertexArray(m_quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    // Load background texture
+    m_backgroundTex = loadTextureFromResource(":/resources/textures/bg.png");
+
+    // =============================
+    // Initialize default scene
+    // =============================
+    createDefaultScene(m_renderData);
+    buildVAOsFromRenderData();
+
+    // Initialize camera
+    m_camera.setCameraData(
+        m_renderData.cameraData.pos,
+        m_renderData.cameraData.look,
+        m_renderData.cameraData.up,
+        m_renderData.cameraData.heightAngle
+        );
+    m_camera.setAspectRatio(float(width()) / float(height()));
+    m_camera.setNearFar(0.1f, 100.f);
+
 }
 
 void Realtime::paintGL() {
-    // 1) Clear the default framebuffer
+    // === NEW: Before each frame starts, the depth test must be re-enabled (because bright pass was disabled after the previous frame).
+    glEnable(GL_DEPTH_TEST);
+    GLuint screenFBO = defaultFramebufferObject();
+
+    //===  NEW: Scene Pass ===
+    glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFBO);
+    glViewport(0, 0, width() * m_devicePixelRatio, height() * m_devicePixelRatio);
+
+    // 1) Clear the scene framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // 2) Bail out if we have nothing to draw
-    if (!m_shader || m_vaos.empty()) {
+    if (!m_shader) {
         return;
     }
 
@@ -84,6 +280,7 @@ void Realtime::paintGL() {
     glUseProgram(m_shader);
 
     // 4) Upload view & projection matrices derived from the current camera
+    float timeSec = m_scrollTime;
     glm::mat4 view = m_camera.getViewMatrix();
     glm::mat4 proj = m_camera.getProjMatrix();
 
@@ -102,6 +299,12 @@ void Realtime::paintGL() {
         glUniform1f(loc, g.kd);
     if (GLint loc = glGetUniformLocation(m_shader, "global_ks"); loc != -1)
         glUniform1f(loc, g.ks);
+    if (GLint loc = glGetUniformLocation(m_shader, "timeSec"); loc != -1)
+        glUniform1f(loc, timeSec);
+    if (GLint loc = glGetUniformLocation(m_shader, "bgScrollOffset"); loc != -1)
+        glUniform1f(loc, m_bgScrollOffset);
+    if (GLint loc = glGetUniformLocation(m_shader, "starScrollSpeed"); loc != -1)
+        glUniform1f(loc, 0.0025f);
 
     glm::vec3 camPos = glm::vec3(m_renderData.cameraData.pos);
     if (GLint loc = glGetUniformLocation(m_shader, "cameraPos"); loc != -1)
@@ -109,7 +312,7 @@ void Realtime::paintGL() {
 
     // 6) Upload lighting parameters
     glm::vec3 lightPos(5.f, 5.f, 5.f);
-    glm::vec3 lightColor(1.f, 1.f, 1.f);
+    glm::vec3 lightColor(1.05f, 0.95f, 0.75f); // warm tone for highlight/bloom
 
     if (GLint loc = glGetUniformLocation(m_shader, "lightPos"); loc != -1)
         glUniform3fv(loc, 1, &lightPos[0]);
@@ -120,55 +323,212 @@ void Realtime::paintGL() {
     for (int i = 0; i < static_cast<int>(m_vaos.size()); ++i) {
         glBindVertexArray(m_vaos[i]);
 
-        const SceneMaterial &mat = m_renderData.shapes[i].primitive.material;
+        const RenderShapeData &shapeData = m_renderData.shapes[i];
+        const SceneMaterial &mat = shapeData.primitive.material;
         if (GLint loc = glGetUniformLocation(m_shader, "matAmbient"); loc != -1)
             glUniform4fv(loc, 1, &mat.cAmbient[0]);
         if (GLint loc = glGetUniformLocation(m_shader, "matDiffuse"); loc != -1)
             glUniform4fv(loc, 1, &mat.cDiffuse[0]);
         if (GLint loc = glGetUniformLocation(m_shader, "matSpecular"); loc != -1)
             glUniform4fv(loc, 1, &mat.cSpecular[0]);
+        if (GLint loc = glGetUniformLocation(m_shader, "matEmissive"); loc != -1)
+            glUniform4fv(loc, 1, &mat.cEmissive[0]);
         if (GLint loc = glGetUniformLocation(m_shader, "matShininess"); loc != -1)
             glUniform1f(loc, mat.shininess);
 
-        glm::mat4 model = m_renderData.shapes[i].ctm;
+        bool useBackgroundTex = false;
+        bool restoreCull = false;
+        if (shapeData.primitive.type == PrimitiveType::PRIMITIVE_SPHERE && m_backgroundTex != 0) {
+            float approxScale = glm::length(glm::vec3(shapeData.ctm[0]));
+            if (approxScale > 10.f) {
+                useBackgroundTex = true;
+            }
+        }
+        if (GLint loc = glGetUniformLocation(m_shader, "useBackgroundTex"); loc != -1) {
+            glUniform1i(loc, useBackgroundTex ? 1 : 0);
+        }
+        if (useBackgroundTex) {
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, m_backgroundTex);
+            if (GLint loc = glGetUniformLocation(m_shader, "backgroundTex"); loc != -1) {
+                glUniform1i(loc, 5);
+            }
+            if (glIsEnabled(GL_CULL_FACE)) {
+                glDisable(GL_CULL_FACE);
+                restoreCull = true;
+            }
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+        } else {
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        glm::mat4 model = shapeData.ctm;
         if (GLint loc = glGetUniformLocation(m_shader, "model"); loc != -1)
             glUniformMatrix4fv(loc, 1, GL_FALSE, &model[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, m_vboSizes[i]);
+
+        if (useBackgroundTex) {
+            if (restoreCull) {
+                glEnable(GL_CULL_FACE);
+            }
+            glDepthMask(GL_TRUE);
+            glEnable(GL_DEPTH_TEST);
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE0);
+        }
+
         glBindVertexArray(0);
     }
 
-    // 8) Unbind the shader
+    // 8) Unbind the shader + scene FBO before post-processing
     glUseProgram(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ========================
+    // NEW: blit FBO to screen (screen pass)
+    // ========================
+
+    // =========================
+    // Pass 2: Bright-pass (bloom)
+    // =========================
+    glBindFramebuffer(GL_FRAMEBUFFER, m_brightFBO);
+    glViewport(0, 0, width()*m_devicePixelRatio, height()*m_devicePixelRatio);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(m_brightShader);
+
+    // sceneColorTex -> uScene
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_sceneColorTex);
+    glUniform1i(glGetUniformLocation(m_brightShader, "uScene"), 0);
+
+    glBindVertexArray(m_quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    // =============================
+    // Pass 2.5: Gaussian Blur (Ping-Pong)
+    // =============================
+    bool horizontal = true;
+    bool firstIter = true;
+    int blurAmount = 15;  // moderate bloom
+
+    glUseProgram(m_blurShader);
+
+    if (GLint loc = glGetUniformLocation(m_blurShader, "blurRadius"); loc != -1) {
+        glUniform1f(loc, 0.9f); // smaller blur kernel
+    }
+
+    // if blur amount is even, use pong; if blur amount is odd, use ping
+    for (int i = 0; i < blurAmount; i++) {
+
+        glBindFramebuffer(GL_FRAMEBUFFER, horizontal ? m_pingFBO : m_pongFBO);
+
+        glUniform1i(glGetUniformLocation(m_blurShader, "horizontal"), horizontal);
+
+        glActiveTexture(GL_TEXTURE0);
+
+        // first iteration uses brightTex
+        GLuint tex = firstIter ? m_brightTex :
+                         (horizontal ? m_pongTex : m_pingTex);
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glUniform1i(glGetUniformLocation(m_blurShader, "image"), 0);
+
+        glBindVertexArray(m_quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        horizontal = !horizontal;
+        if (firstIter) firstIter = false;
+    }
+
+    // =========================
+    // Pass 3: Combine (scene + bloom)
+    // =========================
+    glBindFramebuffer(GL_FRAMEBUFFER, screenFBO);
+    glViewport(0, 0, width()*m_devicePixelRatio, height()*m_devicePixelRatio);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(m_screenShader);
+
+    // sceneTex
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_sceneColorTex);
+    glUniform1i(glGetUniformLocation(m_screenShader, "sceneTex"), 0);
+
+    // bloomTexFinal (chosse from ping/pong)
+    GLuint bloomTexFinal = (blurAmount % 2 == 0 ? m_pongTex : m_pingTex);
+
+    // bloomTex
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, bloomTexFinal);
+    glUniform1i(glGetUniformLocation(m_screenShader, "bloomTex"), 1);
+
+    if (GLint loc = glGetUniformLocation(m_screenShader, "bloomStrength"); loc != -1) {
+        glUniform1f(loc, settings.bloomStrength);
+    }
+
+    glBindVertexArray(m_quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }
 
 void Realtime::resizeGL(int w, int h) {
-    // Tells OpenGL how big the screen is
-    glViewport(0, 0, size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
+    glViewport(0, 0, w * m_devicePixelRatio, h * m_devicePixelRatio);
 
-    // Students: anything requiring OpenGL calls when the program starts should be done here
+    int W = w * m_devicePixelRatio;
+    int H = h * m_devicePixelRatio;
+
+    // scene FBO
+    glBindTexture(GL_TEXTURE_2D, m_sceneColorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, W, H, 0,
+                 GL_RGBA, GL_FLOAT, NULL);
+
+    // bright FBO
+    glBindTexture(GL_TEXTURE_2D, m_brightTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, W, H, 0,
+                 GL_RGBA, GL_FLOAT, NULL);
+
+    // blur FBOs
+    glBindTexture(GL_TEXTURE_2D, m_pingTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, W, H, 0,
+                 GL_RGBA, GL_FLOAT, NULL);
+
+    glBindTexture(GL_TEXTURE_2D, m_pongTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, W, H, 0,
+                 GL_RGBA, GL_FLOAT, NULL);
+
+    // depth buffer
+    glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, W, H);
 }
 
 void Realtime::sceneChanged() {
-    m_renderData = RenderData();
+    // m_renderData = RenderData();
 
-    if (SceneParser::parse(m_sceneFilePath, m_renderData)) {
-        // load camera data
-        m_camera.setCameraData(
-            m_renderData.cameraData.pos,
-            m_renderData.cameraData.look,
-            m_renderData.cameraData.up,
-            m_renderData.cameraData.heightAngle
-        );
+    // if (SceneParser::parse(m_sceneFilePath, m_renderData)) {
+    //     // load camera data
+    //     m_camera.setCameraData(
+    //         m_renderData.cameraData.pos,
+    //         m_renderData.cameraData.look,
+    //         m_renderData.cameraData.up,
+    //         m_renderData.cameraData.heightAngle
+    //     );
 
-        m_camera.setAspectRatio(float(width()) / float(height()));
-        m_camera.setNearFar(settings.nearPlane, settings.farPlane);
-    } else {
-        std::cout << "ERROR: Scene parsing failed!" << std::endl;
-    }
+    //     m_camera.setAspectRatio(float(width()) / float(height()));
+    //     m_camera.setNearFar(settings.nearPlane, settings.farPlane);
+    // } else {
+    //     std::cout << "ERROR: Scene parsing failed!" << std::endl;
+    // }
 
-    // regenerate VAO / VBO
-    buildVAOsFromRenderData();
+    // // regenerate VAO / VBO
+    // buildVAOsFromRenderData();
 
     update();
 }
@@ -214,6 +574,11 @@ void Realtime::buildVAOsFromRenderData()
             m_cylinder.updateParams(settings.shapeParameter1,
                                     settings.shapeParameter2);
             vertexData = m_cylinder.generateShape();
+            break;
+        case PrimitiveType::PRIMITIVE_STAR:
+            m_star.updateParams(settings.shapeParameter1,
+                                settings.shapeParameter2);
+            vertexData = m_star.generateShape();
             break;
         default:
             continue;
@@ -264,6 +629,19 @@ void Realtime::settingsChanged() {
         m_camera.setNearFar(settings.nearPlane, settings.farPlane);
     }
     update(); // asks for a PaintGL() call to occur
+}
+
+void Realtime::timerEvent(QTimerEvent *event) {
+    Q_UNUSED(event);
+    float deltaSec = m_elapsedTimer.restart() * 0.001f;
+    m_scrollTime += deltaSec;
+    m_bgScrollOffset += deltaSec * settings.bgScrollSpeed;
+    if (m_bgScrollOffset >= 1.f) {
+        m_bgScrollOffset = std::fmod(m_bgScrollOffset, 1.f);
+    } else if (m_bgScrollOffset < 0.f) {
+        m_bgScrollOffset = 1.f - std::fmod(-m_bgScrollOffset, 1.f);
+    }
+    update();
 }
 
 // ================== Camera Movement! ---- Not needed
