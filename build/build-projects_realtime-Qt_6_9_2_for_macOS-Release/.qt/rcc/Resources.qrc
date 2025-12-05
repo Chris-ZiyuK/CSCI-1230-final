@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="resources/shaders/default.frag">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/default.frag</file>
+    <file alias="resources/shaders/default.vert">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/default.vert</file>
+    <file alias="resources/shaders/bright.frag">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/bright.frag</file>
+    <file alias="resources/shaders/fullscreen_quad.vert">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/fullscreen_quad.vert</file>
+    <file alias="resources/shaders/screen.frag">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/screen.frag</file>
+    <file alias="resources/shaders/blur.frag">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/shaders/blur.frag</file>
+    <file alias="resources/textures/background.png">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/textures/background.png</file>
+    <file alias="resources/textures/bg.png">/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/resources/textures/bg.png</file>
+  </qresource>
+</RCC>
+

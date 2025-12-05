@@ -1,0 +1,43 @@
+{
+  "name": "root",
+  "globalData": {
+    "ambientCoeff": 0.2,
+    "diffuseCoeff": 0.8,
+    "specularCoeff": 0.3,
+    "transparentCoeff": 0
+  },
+  "cameraData": {
+    "position": [0.0, 0.0, 50.0],
+    "up": [0.0, 1.0, 0.0],
+    "heightAngle": 45.0,
+    "focus": [0.0, 0.0, 0.0]
+  },
+  "groups": [
+    {
+      "lights": [
+        {
+          "type": "directional",
+          "color": [1.0, 1.0, 1.0],
+          "direction": [0.0, -1.0, -1.0]
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "primitives": [
+            {
+              "type": "mesh",
+              "meshFile": "../../resources/models/glow_whale (2).glb",
+              "ambient": [0.2, 0.2, 0.2],
+              "diffuse": [0.8, 0.8, 0.8],
+              "specular": [0.3, 0.3, 0.3],
+              "shininess": 32.0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

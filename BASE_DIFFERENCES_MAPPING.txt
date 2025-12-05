@@ -1,0 +1,404 @@
+================================================================================
+项目基础功能差异映射文档 (Base Differences Mapping)
+================================================================================
+
+本文档详细列出ProjA（Bloom功能）和ProjB（GLB功能）在基础组件上的差异。
+统一基础功能后，再进行高级功能融合。
+
+================================================================================
+1. SHADER UNIFORM命名约定差异
+================================================================================
+
+【ProjA - Bloom项目】
+  Vertex Shader:
+    - uniform mat4 model;
+    - uniform mat4 view;
+    - uniform mat4 proj;
+    
+  Fragment Shader:
+    - uniform float global_ka, global_kd, global_ks;
+    - uniform vec3 cameraPos;
+    - uniform vec4 matAmbient, matDiffuse, matSpecular;
+    - uniform float matShininess;
+    - uniform vec4 matEmissive;
+    - uniform vec3 lightPos, lightColor;
+    - uniform float timeSec, bgScrollOffset, starScrollSpeed;
+    - uniform bool useBackgroundTex;
+    - uniform sampler2D backgroundTex;
+
+【ProjB - GLB项目】
+  Vertex Shader:
+    - uniform mat4 m_model;
+    - uniform mat4 m_view;
+    - uniform mat4 m_proj;
+    - uniform mat4 u_boneMatrices[200];
+    - uniform bool u_useSkinning;
+    
+  Fragment Shader:
+    - uniform Material m_material;
+    - uniform Light m_lights[8];
+    - uniform int m_num_lights;
+    - uniform vec3 m_cam_pos;
+    - uniform sampler2D u_texture;
+    - uniform bool u_hasTexture;
+    - uniform vec3 u_emissiveFactor;
+    - uniform sampler2D u_emissiveTexture;
+    - uniform bool u_hasEmissiveTexture;
+    - uniform sampler2D u_normalTexture;
+    - uniform bool u_hasNormalTexture;
+
+【差异总结】
+  - ProjA使用简短命名（model/view/proj）
+  - ProjB使用带前缀的命名（m_model/m_view/m_proj）
+  - ProjA使用分离的材质uniform（matAmbient等）
+  - ProjB使用Material结构体
+  - ProjA使用单个光源
+  - ProjB支持多个光源（Light数组）
+
+================================================================================
+2. 顶点属性布局差异
+================================================================================
+
+【ProjA - Bloom项目】
+  layout(location = 0) in vec3 objectPos;    // 位置
+  layout(location = 1) in vec3 objectNormal; // 法线
+  
+  VAO构建：
+    - stride = 6 * sizeof(float) (3 pos + 3 normal)
+    - location 0: position (offset 0)
+    - location 1: normal (offset 3*sizeof(float))
+
+【ProjB - GLB项目】
+  layout(location = 0) in vec3 pos;
+  layout(location = 1) in vec3 norm;
+  layout(location = 2) in ivec4 joints;      // 骨骼索引（GLB）
+  layout(location = 3) in vec4 weights;      // 骨骼权重（GLB）
+  layout(location = 4) in vec2 texCoord;     // 纹理坐标（GLB）
+
+【差异总结】
+  - ProjA只有2个属性（位置+法线）
+  - ProjB有5个属性（位置+法线+骨骼+权重+纹理坐标）
+  - GLB模型需要额外的属性，但基础形状不需要
+
+================================================================================
+3. CAMERA系统实现差异
+================================================================================
+
+【ProjA - Bloom项目】
+  实现方式：Camera类（封装好的相机系统）
+  
+  类定义：
+    class Camera {
+      - setCameraData(pos, look, up, heightAngle)
+      - setAspectRatio(aspect)
+      - setNearFar(nearPlane, farPlane)
+      - getViewMatrix() const
+      - getProjMatrix() const
+      - getPosition(), getForward(), getUpVector(), getRightVector()
+    }
+  
+  使用：
+    Camera m_camera;
+    glm::mat4 view = m_camera.getViewMatrix();
+    glm::mat4 proj = m_camera.getProjMatrix();
+  
+  矩阵计算：
+    - getViewMatrix(): 手动构建（使用GLM函数）
+    - getProjMatrix(): glm::perspective()
+
+【ProjB - GLB项目】
+  实现方式：手动管理相机变量
+  
+  变量：
+    glm::mat4 m_projection {1.0f};
+    glm::mat4 m_view {1.0f};
+    glm::vec3 m_cam_pos {0.0f, 0.0f, 5.0f};
+    glm::vec3 m_cam_look {0.0f, 0.0f, -1.0f};
+    glm::vec3 m_cam_up {0.0f, 1.0f, 0.0f};
+    float m_aspect_ratio = 1.0f;
+    float m_fovyRadians = glm::radians(45.0f);
+  
+  更新函数：
+    void updateProjection() {
+      m_projection = generatePerspectiveMatrix(...);
+    }
+    void updateView() {
+      m_view = generateViewMatrix(m_cam_pos, m_cam_look, m_cam_up);
+    }
+  
+  矩阵计算：
+    - generatePerspectiveMatrix(): 手动实现（不用GLM）
+    - generateViewMatrix(): 手动实现（不用GLM）
+
+【差异总结】
+  - ProjA使用Camera类（封装，使用GLM函数）
+  - ProjB手动管理（使用手动实现的矩阵函数）
+  - 两种方式都可以，但需要统一
+
+================================================================================
+4. 矩阵计算方式差异
+================================================================================
+
+【ProjA - Bloom项目】
+  使用GLM库函数：
+    - glm::perspective() 用于投影矩阵
+    - Camera类内部手动构建view矩阵（使用GLM）
+    - 使用glm::mat4等GLM类型
+
+【ProjB - GLB项目】
+  使用手动实现的函数（matrix_utils.cpp）：
+    - generatePerspectiveMatrix() - 手动实现透视投影
+    - generateViewMatrix() - 手动实现view矩阵
+    - generateTranslateMatrix()
+    - generateScaleMatrix()
+    - generateRotateMatrix()
+  
+  不使用GLM的perspective/lookAt等便利函数
+
+【差异总结】
+  - ProjA使用GLM便利函数
+  - ProjB使用手动实现的矩阵函数
+  - 两种方式结果应该相同，但实现方式不同
+
+================================================================================
+5. SETTINGS结构差异
+================================================================================
+
+【ProjA - Bloom项目】
+  struct Settings {
+    std::string sceneFilePath;
+    int shapeParameter1 = 25;
+    int shapeParameter2 = 25;
+    float nearPlane = 1;
+    float farPlane = 1;
+    float bloomStrength = 1.4f;        // Bloom特定
+    float bgScrollSpeed = 0.005f;      // Bloom特定
+    bool perPixelFilter = false;
+    bool kernelBasedFilter = false;
+    bool extraCredit1-4 = false;
+  };
+
+【ProjB - GLB项目】
+  enum class ShapeType {
+    CUBE = 0,
+    CONE,
+    SPHERE,
+    CYLINDER
+  };
+  
+  struct Settings {
+    std::string sceneFilePath;
+    ShapeType shapeType = ShapeType::CUBE;  // 使用枚举
+    int shapeParameter1 = 1;
+    int shapeParameter2 = 1;
+    float nearPlane = 1.0f;
+    float farPlane = 1000.0f;
+    bool perPixelFilter = false;
+    bool kernelBasedFilter = false;
+    bool extraCredit1-4 = false;
+  };
+
+【差异总结】
+  - ProjA有Bloom相关参数（bloomStrength, bgScrollSpeed）
+  - ProjA没有ShapeType枚举
+  - ProjB有ShapeType枚举
+  - 默认参数值不同
+
+================================================================================
+6. 几何体生成方式差异
+================================================================================
+
+【ProjA - Bloom项目】
+  使用Shape类系统：
+    - Cube类（Cube.h/Cube.cpp）
+    - Sphere类
+    - Cone类
+    - Cylinder类
+    - Star类（ProjA特有）
+    
+  每个类有自己的generateShape()方法
+  使用m_cube, m_sphere等对象
+
+【ProjB - GLB项目】
+  使用Tessellator工具类：
+    - Tessellator::generateCube()
+    - Tessellator::generateCone()
+    - Tessellator::generateSphere()
+    - Tessellator::generateCylinder()
+    
+  没有Star形状
+  使用数组存储VAO/VBO（m_shape_vaos, m_shape_vbos）
+
+【差异总结】
+  - ProjA使用面向对象的Shape类
+  - ProjB使用工具函数的Tessellator
+  - ProjA有Star形状，ProjB没有
+
+================================================================================
+7. VAO/VBO管理方式差异
+================================================================================
+
+【ProjA - Bloom项目】
+  std::vector<GLuint> m_vaos;
+  std::vector<GLuint> m_vbos;
+  std::vector<int> m_vboSizes;
+  
+  每个RenderShapeData对应一个VAO/VBO
+  在buildVAOsFromRenderData()中构建
+
+【ProjB - GLB项目】
+  std::array<GLuint, SHAPE_COUNT> m_shape_vbos{};
+  std::array<GLuint, SHAPE_COUNT> m_shape_vaos{};
+  std::array<int, SHAPE_COUNT> m_shape_vertex_counts{};
+  
+  每个ShapeType对应一个固定的VAO/VBO
+  使用shapeIndex()映射ShapeType到数组索引
+
+【差异总结】
+  - ProjA使用动态vector（支持任意数量的形状）
+  - ProjB使用固定数组（只支持4种基础形状）
+
+================================================================================
+8. 渲染流程差异
+================================================================================
+
+【ProjA - Bloom项目】
+  多pass渲染管道：
+    1. Scene Pass: 渲染到m_sceneFBO
+    2. Bright-pass: 提取高亮区域到m_brightFBO
+    3. Gaussian Blur: Ping-pong模糊
+    4. Final合成: 场景 + bloom效果
+    
+  使用多个shader程序：
+    - m_shader (default.vert/frag)
+    - m_brightShader (bright.frag)
+    - m_blurShader (blur.frag)
+    - m_screenShader (screen.frag)
+
+【ProjB - GLB项目】
+  单pass直接渲染：
+    1. 直接渲染到默认framebuffer
+    2. 在paintGL()中直接绘制
+    
+  只使用一个shader程序：
+    - m_default_shader (default.vert/frag)
+
+【差异总结】
+  - ProjA有完整的Bloom后处理管道
+  - ProjB是简单的直接渲染
+  - 这是最大的架构差异
+
+================================================================================
+9. SHADER输入/输出变量命名差异
+================================================================================
+
+【ProjA - Bloom项目】
+  Vertex Shader输出:
+    out vec3 worldPos;
+    out vec3 worldNormal;
+    
+  Fragment Shader输入:
+    in vec3 worldPos;
+    in vec3 worldNormal;
+
+【ProjB - GLB项目】
+  Vertex Shader输出:
+    out vec3 fragNormalWorld;
+    out vec3 fragPosWorld;
+    out vec3 fragNormalView;
+    out vec3 fragPosView;
+    out vec2 fragTexCoord;
+    
+  Fragment Shader输入:
+    in vec3 fragNormalWorld;
+    in vec3 fragPosWorld;
+    in vec3 fragNormalView;
+    in vec3 fragPosView;
+    in vec2 fragTexCoord;
+
+【差异总结】
+  - ProjA只有world space变量
+  - ProjB有world和view space变量
+  - ProjB有纹理坐标输出
+
+================================================================================
+10. 光源系统差异
+================================================================================
+
+【ProjA - Bloom项目】
+  单个光源：
+    uniform vec3 lightPos;
+    uniform vec3 lightColor;
+  
+  简单Phong光照计算
+
+【ProjB - GLB项目】
+  多光源支持：
+    struct Light { ... };
+    uniform Light m_lights[8];
+    uniform int m_num_lights;
+  
+  支持三种光源类型：
+    - 方向光 (type 0)
+    - 点光源 (type 1)
+    - 聚光灯 (type 2)
+  
+  完整的衰减函数和聚光灯falloff
+
+【差异总结】
+  - ProjA只支持单个点光源
+  - ProjB支持最多8个多种类型光源
+
+================================================================================
+统一建议
+================================================================================
+
+基于以上差异分析，建议的统一策略：
+
+1. 【Shader命名】统一使用ProjA的简短命名（model/view/proj）
+   - 原因：更简洁，Bloom管道已经建立
+   - 但需要支持ProjB的Material/Light结构体（可共存）
+
+2. 【Camera系统】统一使用ProjA的Camera类
+   - 原因：封装更好，接口清晰
+   - 但保留ProjB的矩阵工具函数（用于GLB动画计算）
+
+3. 【矩阵计算】两种方式都可以保留
+   - Camera类使用GLM函数（ProjA方式）
+   - GLB动画计算使用手动函数（ProjB方式）
+
+4. 【几何体生成】保留两套系统
+   - ProjA的Shape类用于基础形状（包括Star）
+   - ProjB的Tessellator用于动态生成（如果需要）
+
+5. 【VAO管理】使用ProjA的动态vector方式
+   - 更灵活，支持任意数量的形状和GLB模型
+
+6. 【渲染流程】保留ProjA的Bloom管道
+   - 在Scene Pass中添加GLB渲染逻辑
+
+7. 【Settings】合并两个版本的字段
+   - 保留Bloom参数
+   - 添加ShapeType枚举（如果需要）
+
+================================================================================
+下一步行动清单
+================================================================================
+
+优先级1 - 基础统一：
+  [ ] 统一shader uniform命名约定
+  [ ] 统一vertex shader输入/输出变量命名
+  [ ] 统一Camera系统使用方式
+  [ ] 统一fragment shader输入变量命名
+
+优先级2 - 代码整合：
+  [ ] 在realtime.h中添加GLB相关成员变量
+  [ ] 统一VAO管理方式
+  [ ] 统一Settings结构
+
+优先级3 - 测试验证：
+  [ ] 验证基础几何体渲染
+  [ ] 验证Camera系统工作
+  [ ] 验证基础shader编译
+
+================================================================================

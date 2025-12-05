@@ -1,0 +1,27 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"id" : "tinygltf_autogen_timestamp_deps::@cf7fec98cfc62fa92173",
+	"isGeneratorProvided" : true,
+	"name" : "tinygltf_autogen_timestamp_deps",
+	"paths" : 
+	{
+		"build" : "_deps/tinygltf-build",
+		"source" : "build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

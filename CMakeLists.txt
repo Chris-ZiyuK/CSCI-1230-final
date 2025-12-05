@@ -32,6 +32,9 @@ add_executable(${PROJECT_NAME}
     src/settings.cpp
     src/utils/scenefilereader.cpp
     src/utils/sceneparser.cpp
+    src/utils/tessellator.cpp
+    src/utils/matrix_utils.cpp
+    src/utils/glb_loader.cpp
 
     src/mainwindow.h
     src/realtime.h
@@ -40,6 +43,9 @@ add_executable(${PROJECT_NAME}
     src/utils/scenefilereader.h
     src/utils/sceneparser.h
     src/utils/shaderloader.h
+    src/utils/tessellator.h
+    src/utils/matrix_utils.h
+    src/utils/glb_loader.h
     src/utils/aspectratiowidget/aspectratiowidget.hpp
 
     src/shapes/Cube.cpp
@@ -64,9 +70,64 @@ add_subdirectory(glm)
 
 # GLEW: this creates its library and allows you to `#include "GL/glew.h"`
 add_library(StaticGLEW STATIC glew/src/glew.c
-
 )
 include_directories(${PROJECT_NAME} PRIVATE glew/include)
+
+# tinygltf: GLB/glTF file loader
+# Using FetchContent to download dependencies
+include(FetchContent)
+
+# Download tinygltf (header-only library)
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG v2.8.13
+)
+
+# Populate dependencies
+FetchContent_MakeAvailable(tinygltf)
+
+# Handle single-file dependencies manually
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/third_party)
+
+# Download json.hpp
+set(JSON_HPP_PATH ${CMAKE_BINARY_DIR}/third_party/json.hpp)
+if(NOT EXISTS ${JSON_HPP_PATH})
+    message(STATUS "Downloading json.hpp...")
+    file(DOWNLOAD 
+        https://github.com/nlohmann/json/releases/download/v3.11.2/json.hpp
+        ${JSON_HPP_PATH}
+        SHOW_PROGRESS
+    )
+endif()
+
+# Download stb_image.h
+set(STB_IMAGE_H_PATH ${CMAKE_BINARY_DIR}/third_party/stb_image.h)
+if(NOT EXISTS ${STB_IMAGE_H_PATH})
+    message(STATUS "Downloading stb_image.h...")
+    file(DOWNLOAD 
+        https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
+        ${STB_IMAGE_H_PATH}
+        SHOW_PROGRESS
+    )
+endif()
+
+# Download stb_image_write.h
+set(STB_IMAGE_WRITE_H_PATH ${CMAKE_BINARY_DIR}/third_party/stb_image_write.h)
+if(NOT EXISTS ${STB_IMAGE_WRITE_H_PATH})
+    message(STATUS "Downloading stb_image_write.h...")
+    file(DOWNLOAD 
+        https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+        ${STB_IMAGE_WRITE_H_PATH}
+        SHOW_PROGRESS
+    )
+endif()
+
+# Add include directories for tinygltf and dependencies
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${tinygltf_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/third_party
+)
 
 # Specifies libraries to be linked (Qt components, glew, etc)
 target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -76,6 +137,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt::OpenGLWidgets
     Qt::Xml
     StaticGLEW
+    glm
 )
 
 # Specifies other files
