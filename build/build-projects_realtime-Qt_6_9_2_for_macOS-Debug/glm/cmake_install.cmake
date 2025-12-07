@@ -1,4 +1,4 @@
-# Install script for directory: /Users/qianyun/Desktop/CSCI 1230 Computer Graphics/proj5-GQYzzzz/glm
+# Install script for directory: /Users/qianyun/Desktop/CSCI 1230 Computer Graphics/project-6-final-project-gear-up-GQYzzzz/glm
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

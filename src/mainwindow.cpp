@@ -7,7 +7,9 @@
 #include <QSettings>
 #include <QLabel>
 #include <QGroupBox>
+#include <QSignalBlocker>
 #include <iostream>
+#include <cmath>
 
 void MainWindow::initialize() {
     realtime = new Realtime;
@@ -25,7 +27,7 @@ void MainWindow::initialize() {
     font.setPointSize(12);
     font.setBold(true);
     QLabel *tesselation_label = new QLabel(); // Parameters label
-    tesselation_label->setText("Tesselation");
+    tesselation_label->setText("Effects");
     tesselation_label->setFont(font);
     QLabel *camera_label = new QLabel(); // Camera label
     camera_label->setText("Camera");
@@ -37,9 +39,9 @@ void MainWindow::initialize() {
     // filters_label->setFont(font);
 
     QLabel *param1_label = new QLabel(); // Parameter 1 label
-    param1_label->setText("Parameter 1:");
+    param1_label->setText("Bloom Strength:");
     QLabel *param2_label = new QLabel(); // Parameter 2 label
-    param2_label->setText("Parameter 2:");
+    param2_label->setText("Starfield Scroll Speed:");
     QLabel *near_label = new QLabel(); // Near plane label
     near_label->setText("Near Plane:");
     QLabel *far_label = new QLabel(); // Far plane label
@@ -70,37 +72,43 @@ void MainWindow::initialize() {
     QHBoxLayout *l2 = new QHBoxLayout();
 
     // Create slider controls to control parameters
-    p1Slider = new QSlider(Qt::Orientation::Horizontal); // Parameter 1 slider
-    p1Slider->setTickInterval(1);
-    p1Slider->setMinimum(1);
-    p1Slider->setMaximum(25);
-    p1Slider->setValue(1);
+    bloomSlider = new QSlider(Qt::Orientation::Horizontal);
+    bloomSlider->setTickInterval(1);
+    bloomSlider->setMinimum(0);
+    bloomSlider->setMaximum(300); // maps to 0.0 - 3.0
+    bloomSlider->setSingleStep(1);
+    bloomSlider->setPageStep(1);
+    bloomSlider->setValue(int(std::round(settings.bloomStrength * 100.f)));
 
-    p1Box = new QSpinBox();
-    p1Box->setMinimum(1);
-    p1Box->setMaximum(25);
-    p1Box->setSingleStep(1);
-    p1Box->setValue(1);
+    bloomBox = new QDoubleSpinBox();
+    bloomBox->setDecimals(2);
+    bloomBox->setMinimum(0.0);
+    bloomBox->setMaximum(3.0);
+    bloomBox->setSingleStep(0.1);
+    bloomBox->setValue(settings.bloomStrength);
 
-    p2Slider = new QSlider(Qt::Orientation::Horizontal); // Parameter 2 slider
-    p2Slider->setTickInterval(1);
-    p2Slider->setMinimum(1);
-    p2Slider->setMaximum(25);
-    p2Slider->setValue(1);
+    scrollSlider = new QSlider(Qt::Orientation::Horizontal);
+    scrollSlider->setTickInterval(1);
+    scrollSlider->setMinimum(0);
+    scrollSlider->setMaximum(200); // maps to 0 - 0.02
+    scrollSlider->setSingleStep(1);
+    scrollSlider->setPageStep(1);
+    scrollSlider->setValue(int(std::round(settings.bgScrollSpeed * 10000.f)));
 
-    p2Box = new QSpinBox();
-    p2Box->setMinimum(1);
-    p2Box->setMaximum(25);
-    p2Box->setSingleStep(1);
-    p2Box->setValue(1);
+    scrollBox = new QDoubleSpinBox();
+    scrollBox->setDecimals(4);
+    scrollBox->setMinimum(0.0);
+    scrollBox->setMaximum(0.02);
+    scrollBox->setSingleStep(0.0005);
+    scrollBox->setValue(settings.bgScrollSpeed);
 
     // Adds the slider and number box to the parameter layouts
-    l1->addWidget(p1Slider);
-    l1->addWidget(p1Box);
+    l1->addWidget(bloomSlider);
+    l1->addWidget(bloomBox);
     p1Layout->setLayout(l1);
 
-    l2->addWidget(p2Slider);
-    l2->addWidget(p2Box);
+    l2->addWidget(scrollSlider);
+    l2->addWidget(scrollBox);
     p2Layout->setLayout(l2);
 
     // Creates the boxes containing the camera sliders and number boxes
@@ -163,13 +171,12 @@ void MainWindow::initialize() {
 
     connectUIElements();
 
-    // Set default values of 5 for tesselation parameters
-    onValChangeP1(5);
-    onValChangeP2(5);
+    onBloomSliderChanged(bloomSlider->value());
+    onScrollSliderChanged(scrollSlider->value());
 
     // Set default values for near and far planes
     onValChangeNearBox(0.1f);
-    onValChangeFarBox(10.f);
+    onValChangeFarBox(100.f);
 }
 
 void MainWindow::finish() {
@@ -183,8 +190,8 @@ void MainWindow::connectUIElements() {
     //connectKernelBasedFilter();
     connectUploadFile();
     connectSaveImage();
-    connectParam1();
-    connectParam2();
+    connectBloomControls();
+    connectScrollControls();
     connectNear();
     connectFar();
 }
@@ -206,16 +213,18 @@ void MainWindow::connectSaveImage() {
     connect(saveImage, &QPushButton::clicked, this, &MainWindow::onSaveImage);
 }
 
-void MainWindow::connectParam1() {
-    connect(p1Slider, &QSlider::valueChanged, this, &MainWindow::onValChangeP1);
-    connect(p1Box, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
-            this, &MainWindow::onValChangeP1);
+void MainWindow::connectBloomControls() {
+    connect(bloomSlider, &QSlider::valueChanged,
+            this, &MainWindow::onBloomSliderChanged);
+    connect(bloomBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
+            this, &MainWindow::onBloomBoxChanged);
 }
 
-void MainWindow::connectParam2() {
-    connect(p2Slider, &QSlider::valueChanged, this, &MainWindow::onValChangeP2);
-    connect(p2Box, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
-            this, &MainWindow::onValChangeP2);
+void MainWindow::connectScrollControls() {
+    connect(scrollSlider, &QSlider::valueChanged,
+            this, &MainWindow::onScrollSliderChanged);
+    connect(scrollBox, static_cast<void(QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
+            this, &MainWindow::onScrollBoxChanged);
 }
 
 void MainWindow::connectNear() {
@@ -283,18 +292,46 @@ void MainWindow::onSaveImage() {
     realtime->saveViewportImage(filePath.toStdString());
 }
 
-void MainWindow::onValChangeP1(int newValue) {
-    p1Slider->setValue(newValue);
-    p1Box->setValue(newValue);
-    settings.shapeParameter1 = p1Slider->value();
-    realtime->settingsChanged();
+void MainWindow::onBloomSliderChanged(int value) {
+    double newValue = value / 100.0;
+    {
+        QSignalBlocker blocker(bloomBox);
+        bloomBox->setValue(newValue);
+    }
+    settings.bloomStrength = static_cast<float>(newValue);
+    realtime->update();
 }
 
-void MainWindow::onValChangeP2(int newValue) {
-    p2Slider->setValue(newValue);
-    p2Box->setValue(newValue);
-    settings.shapeParameter2 = p2Slider->value();
-    realtime->settingsChanged();
+void MainWindow::onBloomBoxChanged(double newValue) {
+    if (newValue < 0.0) newValue = 0.0;
+    if (newValue > 3.0) newValue = 3.0;
+    {
+        QSignalBlocker blocker(bloomSlider);
+        bloomSlider->setValue(int(std::round(newValue * 100.0)));
+    }
+    settings.bloomStrength = static_cast<float>(newValue);
+    realtime->update();
+}
+
+void MainWindow::onScrollSliderChanged(int value) {
+    double newValue = value / 10000.0;
+    {
+        QSignalBlocker blocker(scrollBox);
+        scrollBox->setValue(newValue);
+    }
+    settings.bgScrollSpeed = static_cast<float>(newValue);
+    realtime->update();
+}
+
+void MainWindow::onScrollBoxChanged(double newValue) {
+    if (newValue < 0.0) newValue = 0.0;
+    if (newValue > 0.02) newValue = 0.02;
+    {
+        QSignalBlocker blocker(scrollSlider);
+        scrollSlider->setValue(int(std::round(newValue * 10000.0)));
+    }
+    settings.bgScrollSpeed = static_cast<float>(newValue);
+    realtime->update();
 }
 
 void MainWindow::onValChangeNearSlider(int newValue) {

@@ -4,8 +4,10 @@
 #include <QScreen>
 #include <iostream>
 #include <QSettings>
+#include <QResource>
 
 int main(int argc, char *argv[]) {
+    Q_INIT_RESOURCE(Resources);
     QApplication a(argc, argv);
 
     QCoreApplication::setApplicationName("Project 5: Realtime");

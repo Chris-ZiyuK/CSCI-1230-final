@@ -17,8 +17,13 @@
 #include "shapes/Cone.h"
 #include "shapes/Cylinder.h"
 #include "shapes/Sphere.h"
+#include "shapes/Star.h"
 #include "camera.h"
 #include "utils/sceneparser.h"
+
+// For monster
+#include <vector>
+#include "utils/glb_loader.h"
 
 class Realtime : public QOpenGLWidget
 {
@@ -39,11 +44,11 @@ protected:
     void resizeGL(int width, int height) override;      // Called when window size changes
 
 private:
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
+    // void keyPressEvent(QKeyEvent *event) override;
+    // void keyReleaseEvent(QKeyEvent *event) override;
+    // void mousePressEvent(QMouseEvent *event) override;
+    // void mouseReleaseEvent(QMouseEvent *event) override;
+    // void mouseMoveEvent(QMouseEvent *event) override;
     void timerEvent(QTimerEvent *event) override;
 
     // Tick Related Variables
@@ -70,10 +75,48 @@ private:
     Sphere m_sphere;
     Cone m_cone;
     Cylinder m_cylinder;
+    Star m_star;
+    GLuint m_backgroundTex = 0;
 
     std::vector<GLuint> m_vaos;
     std::vector<GLuint> m_vbos;
     std::vector<int>    m_vboSizes;
 
     void buildVAOsFromRenderData();
+
+    // === NEW: For Bloom / offscreen rendering ===
+    GLuint m_sceneFBO = 0;
+    GLuint m_sceneColorTex = 0;
+    GLuint m_sceneDepthRBO = 0;
+
+    GLuint m_brightFBO = 0;
+    GLuint m_brightTex = 0;
+
+    // fullscreen quad + post-processiong shader
+    GLuint m_quadVAO = 0;
+    GLuint m_quadVBO = 0;
+    GLuint m_brightShader = 0;   // bright-pass
+    GLuint m_screenShader = 0;   // draw texture on the screen
+
+    // blur
+    GLuint m_pingFBO = 0;
+    GLuint m_pingTex = 0;
+    GLuint m_pongFBO = 0;
+    GLuint m_pongTex = 0;
+    GLuint m_blurShader = 0;
+
+    float m_scrollTime = 0.f;
+    float m_bgScrollOffset = 0.f;
+
+    // For monster
+    std::unordered_map<std::string, GLBModel> m_glbModels;
+    std::vector<std::string> m_meshFiles;
+    float m_glbAnimTime = 0.f;
+
+    std::string resolveMeshPath(const std::string &meshfile) const;
+    bool ensureGlbModelLoaded(const std::string &meshfile);
+    void drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape);
+    void updateGlbAnimations(float deltaSec);
+    void deleteGlbResources();
+
 };

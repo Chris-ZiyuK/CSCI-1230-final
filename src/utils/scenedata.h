@@ -18,6 +18,7 @@ enum class PrimitiveType {
     PRIMITIVE_CONE,
     PRIMITIVE_CYLINDER,
     PRIMITIVE_SPHERE,
+    PRIMITIVE_STAR,
     PRIMITIVE_MESH
 };
 
@@ -117,7 +118,7 @@ struct SceneMaterial {
     float ior;               // Index of refraction; used for extra credit (refraction)
 
     SceneFileMap textureMap; // Used for texture mapping
-    float blend;             // Used for texture mapping
+    float blend = 0.f;
 
     SceneColor cEmissive; // Not used
     SceneFileMap bumpMap; // Not used
@@ -135,7 +136,7 @@ struct SceneMaterial {
         ior = 0;
 
         textureMap.clear();
-        blend = 0;
+        blend = 0.f;
 
         cEmissive = glm::vec4(0);
         bumpMap.clear();
