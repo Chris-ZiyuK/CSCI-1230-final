@@ -330,6 +330,7 @@ void Realtime::paintGL() {
     GLint uUseNormalMap   = glGetUniformLocation(m_shader, "useNormalMap");
     GLint uMeshEmissive   = glGetUniformLocation(m_shader, "meshEmissive");
     GLint uUseSkinning    = glGetUniformLocation(m_shader, "useSkinning");
+    GLint uUseEmissiveTex = glGetUniformLocation(m_shader, "useMeshEmissiveTex");
     GLint uEnableStarfield = glGetUniformLocation(m_shader, "enableStarfield");
 
 
@@ -349,6 +350,7 @@ void Realtime::paintGL() {
             if (uUseMeshTexture != -1) glUniform1i(uUseMeshTexture, 0);
             if (uUseNormalMap   != -1) glUniform1i(uUseNormalMap, 0);
             if (uMeshEmissive   != -1) glUniform3f(uMeshEmissive, 0.f, 0.f, 0.f);
+            if (uUseEmissiveTex != -1) glUniform1i(uUseEmissiveTex, 0);
             if (uUseSkinning    != -1) glUniform1i(uUseSkinning, 0);
             if (uEnableStarfield != -1) glUniform1i(uEnableStarfield, 0);
             drawMeshPrimitive(i, shapeData);
@@ -359,6 +361,7 @@ void Realtime::paintGL() {
         if (uUseMeshTexture != -1) glUniform1i(uUseMeshTexture, 0);
         if (uUseNormalMap   != -1) glUniform1i(uUseNormalMap, 0);
         if (uMeshEmissive   != -1) glUniform3f(uMeshEmissive, 0.f, 0.f, 0.f);
+        if (uUseEmissiveTex != -1) glUniform1i(uUseEmissiveTex, 0);
         if (uUseSkinning    != -1) glUniform1i(uUseSkinning, 0);
 
         if (i >= m_vaos.size() || m_vaos[i] == 0) continue;
@@ -930,6 +933,8 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
     GLint locUseNormalMap  = glGetUniformLocation(m_shader, "useNormalMap");
     GLint locNormalMapTex  = glGetUniformLocation(m_shader, "normalMapTexture");
     GLint locMeshEmissive  = glGetUniformLocation(m_shader, "meshEmissive");
+    GLint locUseEmissiveTex = glGetUniformLocation(m_shader, "useMeshEmissiveTex");
+    GLint locEmissiveTex   = glGetUniformLocation(m_shader, "meshEmissiveTex");
     GLint locUseSkinning   = glGetUniformLocation(m_shader, "useSkinning");
     GLint locBoneMatrices  = glGetUniformLocation(m_shader, "boneMatrices[0]");
 
@@ -1006,6 +1011,8 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
         GLuint textureId = 0;
         bool hasNormalMap = false;
         GLuint normalTexId = 0;
+        bool hasEmissiveMap = false;
+        GLuint emissiveTexId = 0;
         if (glbMaterial && glbMaterial->hasBaseColorTexture) {
             int texIdx = glbMaterial->baseColorTextureIndex;
             if (texIdx >= 0 && texIdx < static_cast<int>(model.textures.size())) {
@@ -1025,8 +1032,8 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
-
-        if (glbMaterial && glbMaterial->normalTextureIndex >= 0) {
+        if (glbMaterial && glbMaterial->normalTextureIndex >= 0 &&
+            meshfile.find("titan") != std::string::npos) {
             int normalIdx = glbMaterial->normalTextureIndex;
             if (normalIdx >= 0 && normalIdx < static_cast<int>(model.textures.size())) {
                 const GLBTexture &nTex = model.textures[normalIdx];
@@ -1043,6 +1050,29 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
             if (locNormalMapTex != -1) glUniform1i(locNormalMapTex, 1);
         } else {
             glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+        glActiveTexture(GL_TEXTURE0);
+
+        if (glbMaterial && glbMaterial->emissiveTextureIndex >= 0) {
+            int emissiveIdx = glbMaterial->emissiveTextureIndex;
+            if (emissiveIdx >= 0 && emissiveIdx < static_cast<int>(model.textures.size())) {
+                const GLBTexture &eTex = model.textures[emissiveIdx];
+                if (eTex.loaded && eTex.textureId != 0) {
+                    hasEmissiveMap = true;
+                    emissiveTexId = eTex.textureId;
+                }
+            }
+        }
+        if (locUseEmissiveTex != -1) {
+            glUniform1i(locUseEmissiveTex, hasEmissiveMap ? 1 : 0);
+        }
+        if (hasEmissiveMap) {
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, emissiveTexId);
+            if (locEmissiveTex != -1) glUniform1i(locEmissiveTex, 2);
+        } else {
+            glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
         glActiveTexture(GL_TEXTURE0);
@@ -1066,10 +1096,13 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
     if (locUseMeshTex != -1) glUniform1i(locUseMeshTex, 0);
     if (locUseNormalMap != -1) glUniform1i(locUseNormalMap, 0);
     if (locMeshEmissive != -1) glUniform3f(locMeshEmissive, 0.f, 0.f, 0.f);
+    if (locUseEmissiveTex != -1) glUniform1i(locUseEmissiveTex, 0);
     if (locUseSkinning != -1) glUniform1i(locUseSkinning, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 

@@ -34,7 +34,11 @@ in vec2 fragTexCoord;
 
 uniform bool useMeshTexture;
 uniform sampler2D meshTexture;
+uniform bool useNormalMap;
+uniform sampler2D normalMapTexture;
 uniform vec3 meshEmissive;
+uniform bool useMeshEmissiveTex;
+uniform sampler2D meshEmissiveTex;
 uniform bool enableStarfield;
 
 
@@ -134,8 +138,21 @@ void main()
 
     vec3 baseColor = matDiffuse.rgb;
     if (useMeshTexture) {
-        fragColor = texture(meshTexture, fragTexCoord);
-        return;
+        if (!useNormalMap) {
+            fragColor = texture(meshTexture, fragTexCoord);
+            return;
+        }
+        baseColor = texture(meshTexture, fragTexCoord).rgb;
+    }
+
+    if (useMeshTexture && useNormalMap) {
+        vec3 tangent = normalize(cross(N, vec3(0.0, 1.0, 0.0)));
+        if (length(tangent) < 0.1) {
+            tangent = normalize(cross(N, vec3(1.0, 0.0, 0.0)));
+        }
+        vec3 bitangent = normalize(cross(N, tangent));
+        vec3 normalSample = texture(normalMapTexture, fragTexCoord).rgb * 2.0 - 1.0;
+        N = normalize(tangent * normalSample.x + bitangent * normalSample.y + N * normalSample.z);
     }
 
     vec3 ambient = global_ka * matAmbient.rgb;
@@ -149,7 +166,12 @@ void main()
     vec3 shading = ambient + diffuse + specular;
 
     vec3 stars = enableStarfield ? computeStarfield(worldPos) : vec3(0.0);
-    vec3 emissive = matEmissive.rgb + meshEmissive;
+vec3 emissive = matEmissive.rgb;
+if (useMeshEmissiveTex) {
+    emissive += meshEmissive * texture(meshEmissiveTex, fragTexCoord).rgb;
+} else {
+    emissive += meshEmissive;
+}
 
     vec3 finalColor = shading + stars + emissive;
 
