@@ -29,6 +29,14 @@ uniform float starScrollSpeed;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
+// For monster
+in vec2 fragTexCoord;
+
+uniform bool useMeshTexture;
+uniform sampler2D meshTexture;
+uniform vec3 meshEmissive;
+uniform bool enableStarfield;
+
 
 // ===============================================
 // STARFIELD — Procedural far-field galaxy glow
@@ -124,10 +132,15 @@ void main()
     vec3 V = normalize(cameraPos - worldPos);
     vec3 L = normalize(lightPos - worldPos);
 
-    vec3 ambient = global_ka * matAmbient.rgb;
+    vec3 baseColor = matDiffuse.rgb;
+    if (useMeshTexture) {
+        fragColor = texture(meshTexture, fragTexCoord);
+        return;
+    }
 
+    vec3 ambient = global_ka * matAmbient.rgb;
     float diff = max(dot(N, L), 0.0);
-    vec3 diffuse = global_kd * diff * matDiffuse.rgb * lightColor;
+    vec3 diffuse = global_kd * diff * baseColor * lightColor;
 
     vec3 R = reflect(-L, N);
     float spec = pow(max(dot(V, R), 0.0), matShininess);
@@ -135,15 +148,10 @@ void main()
 
     vec3 shading = ambient + diffuse + specular;
 
-    // Stars
-    vec3 stars = computeStarfield(worldPos);
+    vec3 stars = enableStarfield ? computeStarfield(worldPos) : vec3(0.0);
+    vec3 emissive = matEmissive.rgb + meshEmissive;
 
-    // Self lighting
-    vec3 emissive = matEmissive.rgb;
-
-    // combine
     vec3 finalColor = shading + stars + emissive;
-
 
     fragColor = vec4(finalColor, 1.0);
 }

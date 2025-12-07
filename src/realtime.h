@@ -21,6 +21,10 @@
 #include "camera.h"
 #include "utils/sceneparser.h"
 
+// For monster
+#include <vector>
+#include "utils/glb_loader.h"
+
 class Realtime : public QOpenGLWidget
 {
 public:
@@ -103,5 +107,16 @@ private:
 
     float m_scrollTime = 0.f;
     float m_bgScrollOffset = 0.f;
+
+    // For monster
+    std::unordered_map<std::string, GLBModel> m_glbModels;
+    std::vector<std::string> m_meshFiles;
+    float m_glbAnimTime = 0.f;
+
+    std::string resolveMeshPath(const std::string &meshfile) const;
+    bool ensureGlbModelLoaded(const std::string &meshfile);
+    void drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape);
+    void updateGlbAnimations(float deltaSec);
+    void deleteGlbResources();
 
 };
