@@ -24,6 +24,8 @@
 // For monster
 #include <vector>
 #include "utils/glb_loader.h"
+// ANIMATION
+#include "utils/animation_director.h"
 
 class Realtime : public QOpenGLWidget
 {
@@ -34,6 +36,8 @@ public:
     void settingsChanged();
     void saveViewportImage(std::string filePath);
     void setSceneFilePath(std::string path);
+    // ANIMATION
+    void resetAnimation();
 
 public slots:
     void tick(QTimerEvent* event);                      // Called once per tick of m_timer
@@ -118,5 +122,8 @@ private:
     void drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape);
     void updateGlbAnimations(float deltaSec);
     void deleteGlbResources();
+
+    // ANIMATION
+    AnimationDirector m_animationDirector;
 
 };

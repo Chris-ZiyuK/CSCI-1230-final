@@ -145,7 +145,8 @@ public:
     // @param model Model to update
     // @param currentTime Current animation time in seconds
     // @param animationIndex Index of animation to play (-1 for no animation)
+    // @param ignoreRootTranslation If true, ignore translation on root joint
     // @return true if update succeeded
-    static bool updateAnimation(GLBModel& model, float currentTime, int animationIndex = 0);
+    static bool updateAnimation(GLBModel& model, float currentTime, int animationIndex = 0, bool ignoreRootTranslation = false);
 };
 

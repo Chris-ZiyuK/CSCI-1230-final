@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
     src/settings.cpp
     src/utils/scenefilereader.cpp
     src/utils/sceneparser.cpp
+    src/utils/animation_director.cpp
 
     src/mainwindow.h
     src/realtime.h
@@ -39,6 +40,7 @@ add_executable(${PROJECT_NAME}
     src/utils/scenedata.h
     src/utils/scenefilereader.h
     src/utils/sceneparser.h
+    src/utils/animation_director.h
     src/utils/shaderloader.h
     src/utils/aspectratiowidget/aspectratiowidget.hpp
 

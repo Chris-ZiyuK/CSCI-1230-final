@@ -1,0 +1,216 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						6,
+						7,
+						8,
+						9
+					]
+				},
+				{
+					"build" : "glm",
+					"jsonFile" : "directory-glm-Release-2bef2a2728e6bac3f360.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "glm"
+				},
+				{
+					"build" : "_deps/tinygltf-build",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.tinygltf-build-Release-af3acabfd02d7798b229.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src",
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "projects_realtime",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						6,
+						7,
+						8,
+						9
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "tinygltf",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5,
+						10,
+						11,
+						12
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "StaticGLEW::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-StaticGLEW-Release-b6c1e9526d2f269e1e4e.json",
+					"name" : "StaticGLEW",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "StaticGLEW_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-StaticGLEW_autogen-Release-5c1884a4d3a8c5638901.json",
+					"name" : "StaticGLEW_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "StaticGLEW_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-StaticGLEW_autogen_timestamp_deps-Release-ec299a01de5c465de223.json",
+					"name" : "StaticGLEW_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "loader_example::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-loader_example-Release-90f37dc029f92f5cbb38.json",
+					"name" : "loader_example",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "loader_example_autogen::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-loader_example_autogen-Release-f26c0983a279867251a3.json",
+					"name" : "loader_example_autogen",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "loader_example_autogen_timestamp_deps::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-loader_example_autogen_timestamp_deps-Release-0fefbd4b147a4cb7eceb.json",
+					"name" : "loader_example_autogen_timestamp_deps",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "projects_realtime::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-projects_realtime-Release-20b44e58f64db042e1f1.json",
+					"name" : "projects_realtime",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "projects_realtime_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-projects_realtime_autogen-Release-ff0f8ecb219a9caedbea.json",
+					"name" : "projects_realtime_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "projects_realtime_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-projects_realtime_autogen_timestamp_deps-Release-03ae91073baa66f43c00.json",
+					"name" : "projects_realtime_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "projects_realtime_other_files::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-projects_realtime_other_files-Release-b6e08269bfc740c241de.json",
+					"name" : "projects_realtime_other_files",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tinygltf::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-tinygltf-Release-3a683f92ffa0537535c7.json",
+					"name" : "tinygltf",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tinygltf_autogen::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-tinygltf_autogen-Release-c27f817ae8d360c884e4.json",
+					"name" : "tinygltf_autogen",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "tinygltf_autogen_timestamp_deps::@cf7fec98cfc62fa92173",
+					"jsonFile" : "target-tinygltf_autogen_timestamp_deps-Release-9a003a21a6da87ecb766.json",
+					"name" : "tinygltf_autogen_timestamp_deps",
+					"projectIndex" : 1
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release",
+		"source" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

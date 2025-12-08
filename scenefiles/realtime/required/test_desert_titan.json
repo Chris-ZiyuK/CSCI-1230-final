@@ -7,7 +7,7 @@
     "transparentCoeff": 0
   },
   "cameraData": {
-    "position": [140.0, 80.0, 240.0],
+    "position": [0.0, 2.0, 15.0],
     "up": [0.0, 1.0, 0.0],
     "heightAngle": 45.0,
     "focus": [0.0, 0.0, 0.0]
@@ -33,7 +33,7 @@
           "primitives": [
             {
               "type": "mesh",
-              "meshFile": "../../resources/models/desert-titan/Desert Titan.glb",
+              "meshFile": "../../resources/models/desert-titan/Desert Titan_InPlace.glb",
               "ambient": [0.2, 0.2, 0.2],
               "diffuse": [0.8, 0.8, 0.8],
               "specular": [0.3, 0.3, 0.3],

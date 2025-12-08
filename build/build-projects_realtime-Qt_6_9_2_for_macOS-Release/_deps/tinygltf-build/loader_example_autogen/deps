@@ -1,0 +1,9 @@
+loader_example_autogen/timestamp: \
+	/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake \
+	/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/GNUInstallDirs.cmake \
+	/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake \
+	/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/.qtc/package-manager/auto-setup.cmake \
+	/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/CMakeLists.txt \
+	/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/cmake/TinyGLTFConfig.cmake.in \
+	/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/loader_example.cc \
+	/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/bin/cmake

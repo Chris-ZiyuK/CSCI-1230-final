@@ -1,0 +1,8 @@
+set(__QT_DEPLOY_TARGET_loader_example_FILE /Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example)
+set(__QT_DEPLOY_TARGET_loader_example_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_tinygltf_FILE /Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/libtinygltf.a)
+set(__QT_DEPLOY_TARGET_tinygltf_TYPE STATIC_LIBRARY)
+set(__QT_DEPLOY_TARGET_projects_realtime_FILE /Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/projects_realtime)
+set(__QT_DEPLOY_TARGET_projects_realtime_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_StaticGLEW_FILE /Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/libStaticGLEW.a)
+set(__QT_DEPLOY_TARGET_StaticGLEW_TYPE STATIC_LIBRARY)

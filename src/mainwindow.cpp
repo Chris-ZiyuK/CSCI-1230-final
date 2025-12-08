@@ -64,6 +64,10 @@ void MainWindow::initialize() {
     
     saveImage = new QPushButton();
     saveImage->setText(QStringLiteral("Save Image"));
+    
+    // ANIMATION: create play button
+    playButton = new QPushButton();
+    playButton->setText(QStringLiteral("Play Animation"));
 
     // Creates the boxes containing the parameter sliders and number boxes
     QGroupBox *p1Layout = new QGroupBox(); // horizonal slider 1 alignment
@@ -153,6 +157,7 @@ void MainWindow::initialize() {
 
     vLayout->addWidget(uploadFile);
     vLayout->addWidget(saveImage);
+    vLayout->addWidget(playButton);  // ANIMATION: add play button
     vLayout->addWidget(tesselation_label);
     vLayout->addWidget(param1_label);
     vLayout->addWidget(p1Layout);
@@ -190,6 +195,7 @@ void MainWindow::connectUIElements() {
     //connectKernelBasedFilter();
     connectUploadFile();
     connectSaveImage();
+    connectPlayButton();  // ANIMATION: connect play button
     connectBloomControls();
     connectScrollControls();
     connectNear();
@@ -211,6 +217,11 @@ void MainWindow::connectUploadFile() {
 
 void MainWindow::connectSaveImage() {
     connect(saveImage, &QPushButton::clicked, this, &MainWindow::onSaveImage);
+}
+
+// ANIMATION: connect play button
+void MainWindow::connectPlayButton() {
+    connect(playButton, &QPushButton::clicked, this, &MainWindow::onPlayButton);
 }
 
 void MainWindow::connectBloomControls() {
@@ -360,5 +371,10 @@ void MainWindow::onValChangeFarBox(double newValue) {
     //farBox->setValue(newValue);
     settings.farPlane = farBox->value();
     realtime->settingsChanged();
+}
+
+// ANIMATION: reset animation timer when play button is clicked
+void MainWindow::onPlayButton() {
+    realtime->resetAnimation();
 }
 

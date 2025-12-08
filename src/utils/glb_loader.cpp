@@ -1039,7 +1039,7 @@ static void interpolateChannel(const GLBAnimationChannel& channel, float time,
 }
 
 // Update animation and compute bone matrices
-bool GLBLoader::updateAnimation(GLBModel& model, float currentTime, int animationIndex) {
+bool GLBLoader::updateAnimation(GLBModel& model, float currentTime, int animationIndex, bool ignoreRootTranslation) {
     if (!model.hasSkin || model.skin.joints.empty()) {
         return false;
     }
@@ -1115,8 +1115,15 @@ bool GLBLoader::updateAnimation(GLBModel& model, float currentTime, int animatio
             glm::vec3 s = joint.bindScale;
             
             // Update based on channel path
+            // if ignoreRootTranslation is true and this is root joint, skip translation
+            bool isRootJoint = (jointIndex == model.skin.rootJointIndex) || 
+                              (model.skin.rootJointIndex < 0 && jointIndex == 0);
+            
             if (channel.path == "translation") {
-                t = translation;
+                if (!ignoreRootTranslation || !isRootJoint) {
+                    t = translation;
+                }
+                // else: keep bind translation for root joint
             } else if (channel.path == "rotation") {
                 r = rotation;
             } else if (channel.path == "scale") {

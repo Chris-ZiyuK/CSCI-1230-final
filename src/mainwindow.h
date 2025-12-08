@@ -23,6 +23,7 @@ private:
     void connectScrollControls();
     void connectNear();
     void connectFar();
+    void connectPlayButton();  // ANIMATION: connect play button
 
     // From old Project 6
     // void connectPerPixelFilter();
@@ -39,6 +40,7 @@ private:
 
     QPushButton *uploadFile;
     QPushButton *saveImage;
+    QPushButton *playButton;  // ANIMATION: play/reset animation button
     QSlider *bloomSlider;
     QSlider *scrollSlider;
     QDoubleSpinBox *bloomBox;
@@ -63,5 +65,6 @@ private slots:
     void onValChangeFarSlider(int newValue);
     void onValChangeNearBox(double newValue);
     void onValChangeFarBox(double newValue);
+    void onPlayButton();  // ANIMATION: reset animation timer
 
 };

@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QImage>
 #include <iostream>
+#include <algorithm>
 #include "settings.h"
 #include "utils/shaderloader.h"
 #include "camera.h"
@@ -412,7 +413,8 @@ void Realtime::paintGL() {
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
-        glm::mat4 model = shapeData.ctm;
+        // ANIMATION: get animated transform
+        glm::mat4 model = m_animationDirector.getTransform(i);
         if (GLint loc = glGetUniformLocation(m_shader, "model"); loc != -1)
             glUniformMatrix4fv(loc, 1, GL_FALSE, &model[0][0]);
 
@@ -585,6 +587,7 @@ void Realtime::sceneChanged() {
         return;
     }
 
+    // ANIMATION: load single scene file (can contain multiple objects)
     RenderData parsed;
     if (!SceneParser::parse(m_sceneFilePath, parsed)) {
         std::cerr << "Failed to parse scene: " << m_sceneFilePath << std::endl;
@@ -595,10 +598,6 @@ void Realtime::sceneChanged() {
     RenderData combined;
     createDefaultScene(combined);
 
-    // Override the default values with the global coefficient/camera in JSON
-    // combined.globalData = parsed.globalData;
-    // combined.cameraData = parsed.cameraData;
-
     // Lighting and shape: Add the content in the JSON on the basis of the starry sky scene
     combined.lights.insert(combined.lights.end(),
                            parsed.lights.begin(), parsed.lights.end());
@@ -606,6 +605,13 @@ void Realtime::sceneChanged() {
                            parsed.shapes.begin(), parsed.shapes.end());
 
     m_renderData = std::move(combined);
+
+    // ANIMATION: initialize animation director
+    m_animationDirector.initialize(m_renderData);
+    m_animationDirector.setupTitanFishAnimation();
+    // ANIMATION: reset timer when scene is loaded (start from beginning)
+    m_animationDirector.reset();
+    m_glbAnimTime = 0.f;
 
     // Update camera parameters
     m_camera.setCameraData(
@@ -771,6 +777,9 @@ void Realtime::timerEvent(QTimerEvent *event) {
     } else if (m_bgScrollOffset < 0.f) {
         m_bgScrollOffset = 1.f - std::fmod(-m_bgScrollOffset, 1.f);
     }
+
+    // ANIMATION: update animation director
+    m_animationDirector.update(deltaSec);
 
     // For monster: Promote skeletal animation
     updateGlbAnimations(deltaSec);
@@ -944,21 +953,36 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
     // modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(1.f, 0.f, 0.f)); // turn it right(vertical)
     // modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f),  glm::vec3(0.f, 1.f, 0.f)); // turn it left
 
-    glm::mat4 modelMatrix = shape.ctm;
+    // ANIMATION: get animated transform (returns original ctm if no animation)
+    glm::mat4 modelMatrix = m_animationDirector.getTransform(shapeIndex);
     std::string name = meshfile;
+    // convert to lowercase for case-insensitive matching
+    std::string nameLower = name;
+    std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+    
+    // apply model-specific adjustments (always apply, even with path animation)
+    // ANIMATION: use unified scale system from animation director
+    float modelScale = m_animationDirector.getModelScale(meshfile);
+    
     if (name.find("alien_fish") != std::string::npos) {
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f));
+        // fish: scale and rotation adjustments
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(1.f, 0.f, 0.f)); // turn it right(vertical)
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f),  glm::vec3(0.f, 1.f, 0.f)); // turn it left
-    } else if (name.find("titan") != std::string::npos) {
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.01f));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f),  glm::vec3(0.f, 1.f, 0.f)); // turn it right (head facing right)
+    } else if (nameLower.find("titan") != std::string::npos) {
+        // titan: scale and rotation adjustments
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
     } else if (name.find("glow_whale") != std::string::npos) {
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f));
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(180.f), glm::vec3(0.f, 1.f, 0.f));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f),  glm::vec3(0.f, 1.f, 0.f));
+    } else {
+        // default: apply scale if set
+        if (modelScale != 1.0f) {
+            modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));
+        }
     }
-
 
     if (locModel != -1) {
         glUniformMatrix4fv(locModel, 1, GL_FALSE, &modelMatrix[0][0]);
@@ -1164,7 +1188,7 @@ bool Realtime::ensureGlbModelLoaded(const std::string &meshfile) {
         return false;
     }
     if (model.hasSkin) {
-        GLBLoader::updateAnimation(model, 0.0f, -1); // 初始化到 bind pose
+        GLBLoader::updateAnimation(model, 0.0f, -1, false); // initialize to bind pose
     }
     m_glbModels[meshfile] = std::move(model);
     return true;
@@ -1173,17 +1197,30 @@ bool Realtime::ensureGlbModelLoaded(const std::string &meshfile) {
 void Realtime::updateGlbAnimations(float deltaSec) {
     if (m_glbModels.empty()) return;
 
-    m_glbAnimTime += deltaSec;
+    // ANIMATION: use animation director for glb animations
     for (auto &[path, model] : m_glbModels) {
         if (!model.hasSkin) continue;
-        if (!model.animations.empty()) {
-            float duration = model.animations[0].duration;
-            float t = duration > 0.f ? std::fmod(m_glbAnimTime, duration) : m_glbAnimTime;
-            GLBLoader::updateAnimation(model, t, 0);
+        
+        if (m_animationDirector.isGLBAnimationActive(path)) {
+            // use animation director timeline
+            float animTime = m_animationDirector.getGLBAnimationTime(path);
+            int animIndex = m_animationDirector.getGLBAnimationIndex(path);
+            bool ignoreRootTrans = m_animationDirector.shouldIgnoreRootTranslation(path);
+            GLBLoader::updateAnimation(model, animTime, animIndex, ignoreRootTrans);
         } else {
-            GLBLoader::updateAnimation(model, 0.0f, -1);
+            // no animation control, use default behavior (loop first animation)
+            if (!model.animations.empty()) {
+                float duration = model.animations[0].duration;
+                float t = duration > 0.f ? std::fmod(m_glbAnimTime, duration) : m_glbAnimTime;
+                GLBLoader::updateAnimation(model, t, 0, false);
+            } else {
+                GLBLoader::updateAnimation(model, 0.0f, -1, false);
+            }
         }
     }
+    
+    // ANIMATION: update glb animation time for default behavior
+    m_glbAnimTime += deltaSec;
 }
 
 void Realtime::deleteGlbResources() {
@@ -1192,3 +1229,11 @@ void Realtime::deleteGlbResources() {
     }
     m_glbModels.clear();
 }
+
+// ANIMATION: reset animation timer
+void Realtime::resetAnimation() {
+    m_animationDirector.reset();
+    m_glbAnimTime = 0.f;
+    std::cout << "[Animation] Animation reset" << std::endl;
+}
+

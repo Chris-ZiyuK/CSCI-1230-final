@@ -1,0 +1,90 @@
+{
+	"BUILD_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example_autogen",
+	"CMAKE_BINARY_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src",
+	"CMAKE_EXECUTABLE" : "/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/CMakeLists.txt",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/.qtc/package-manager/auto-setup.cmake",
+		"/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/GNUInstallDirs.cmake",
+		"/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake",
+		"/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/cmake/TinyGLTFConfig.cmake.in"
+	],
+	"CMAKE_SOURCE_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "loader_example_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example_autogen/include",
+	"MOC_COMPILATION_FILE" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/src",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/projects_realtime",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/PRIVATE",
+		"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/glew/include",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/usr/include/c++/v1",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/17/include",
+		"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/usr/include",
+		"/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/clang++",
+		"-std=gnu++11",
+		"-dM",
+		"-E",
+		"-c",
+		"/Users/ziyukong/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/loader_example_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 10,
+	"PARSE_CACHE_FILE" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/CMakeFiles/loader_example_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/Users/ziyukong/Qt/6.9.2/macos/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "/Users/ziyukong/Qt/6.9.2/macos/libexec/uic",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 9,
+	"SETTINGS_FILE" : "/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-build/CMakeFiles/loader_example_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"/Users/ziyukong/codebase/BRN/CS1230/projects/CSCI-1230-final/build/build-projects_realtime-Qt_6_9_2_for_macOS-Release/_deps/tinygltf-src/loader_example.cc",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}
