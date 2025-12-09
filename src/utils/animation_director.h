@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <glm/glm.hpp>
 #include "sceneparser.h"
@@ -95,17 +96,29 @@ public:
     // playback helpers
     float getMaxPathDuration() const;
     void setAutoStopTime(float timeSec);
+    bool isShapeVisible(size_t shapeIndex) const;
     
 private:
     // internal implementation
     glm::mat4 evaluatePathAnimation(size_t shapeIndex, float time) const;
     float getLocalTime(float globalTime, const PathAnimation& anim) const;
+    glm::vec3 extractPosition(const glm::mat4& transform) const;
+    void hideShape(size_t shapeIndex);
+    void resetVisibility();
     
     // data storage
     std::unordered_map<size_t, PathAnimation> m_pathAnimations;
     std::unordered_map<std::string, GLBAnimationControl> m_glbAnimations;
     std::unordered_map<std::string, size_t> m_meshfileToShapeIndex;  // mapping table
+    std::unordered_map<size_t, std::string> m_shapeIndexToMeshfile;
     std::unordered_map<std::string, float> m_modelScales;  // model scale multipliers
+    std::unordered_set<size_t> m_hiddenShapes;  // shapes to skip rendering
+
+    // cached indices for titan & fish
+    size_t m_titanIndex = SIZE_MAX;
+    size_t m_fishIndex = SIZE_MAX;
+    std::string m_titanMeshfile;
+    std::string m_fishMeshfile;
     
     float m_currentTime = 0.f;
     bool m_playing = true;

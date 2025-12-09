@@ -937,6 +937,11 @@ void Realtime::setSceneFilePath(std::string path) { m_sceneFilePath = path; }
 
 // For monster
 void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape) {
+    // skip hidden objects (e.g., fish after collision)
+    if (!m_animationDirector.isShapeVisible(shapeIndex)) {
+        return;
+    }
+
     if (shapeIndex >= m_meshFiles.size()) return;
     const std::string &meshfile = m_meshFiles[shapeIndex];
     if (meshfile.empty()) return;
@@ -977,7 +982,7 @@ void Realtime::drawMeshPrimitive(size_t shapeIndex, const RenderShapeData &shape
         // fish: scale and rotation adjustments
         modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(180.0f), glm::vec3(1.f, 0.f, 0.f)); // turn it right(vertical)
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(-90.0f),  glm::vec3(0.f, 1.f, 0.f)); // turn it right (head facing right)
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(90.0f),  glm::vec3(0.f, 1.f, 0.f)); // turn it right (head facing right)
     } else if (nameLower.find("titan") != std::string::npos) {
         // titan: scale and rotation adjustments
         modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale));

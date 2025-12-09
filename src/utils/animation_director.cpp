@@ -11,6 +11,12 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_pathAnimations.clear();
     m_glbAnimations.clear();
     m_meshfileToShapeIndex.clear();
+    m_shapeIndexToMeshfile.clear();
+    m_hiddenShapes.clear();
+    m_titanIndex = SIZE_MAX;
+    m_fishIndex = SIZE_MAX;
+    m_titanMeshfile.clear();
+    m_fishMeshfile.clear();
     
     // build meshfile to shape index mapping
     for (size_t i = 0; i < renderData.shapes.size(); ++i) {
@@ -18,6 +24,7 @@ void AnimationDirector::initialize(const RenderData& renderData) {
         if (shape.primitive.type == PrimitiveType::PRIMITIVE_MESH && 
             !shape.primitive.meshfile.empty()) {
             m_meshfileToShapeIndex[shape.primitive.meshfile] = i;
+            m_shapeIndexToMeshfile[i] = shape.primitive.meshfile;
         }
     }
 }
@@ -122,11 +129,13 @@ void AnimationDirector::setupTitanFishAnimation() {
     // setup titan path animation: move from left to right
     // note: scale and rotation in keyframes are relative, model-specific adjustments applied separately
     if (titanIndex != SIZE_MAX) {
+        m_titanIndex = titanIndex;
+        m_titanMeshfile = titanMeshfile;
         std::cout << "[Animation] Setting up titan animation at index " << titanIndex << std::endl;
         std::cout << "[Animation] Titan scale: " << getModelScale(titanMeshfile) << std::endl;
         std::vector<PathKeyframe> titanKeyframes = {
-            {0.0f, glm::vec3(-8.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
-            {5.0f, glm::vec3(16.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+            {0.0f, glm::vec3(-18.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+            {10.0f, glm::vec3(16.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
         };
         addPathAnimation(titanIndex, titanKeyframes, false);
         
@@ -142,16 +151,23 @@ void AnimationDirector::setupTitanFishAnimation() {
     // setup fish path animation: stay at center, don't move
     // note: scale and rotation in keyframes are relative, model-specific adjustments applied separately
     if (fishIndex != SIZE_MAX) {
+        m_fishIndex = fishIndex;
+        m_fishMeshfile = fishMeshfile;
         std::cout << "[Animation] Setting up fish animation at index " << fishIndex << std::endl;
         std::cout << "[Animation] Fish scale: " << getModelScale(fishMeshfile) << std::endl;
         std::vector<PathKeyframe> fishKeyframes = {
-            {0.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+            // swim from right to left across titan's path
+            {0.0f, glm::vec3(12.0f, 0.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+            {10.0f, glm::vec3(-12.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
         };
         addPathAnimation(fishIndex, fishKeyframes, false);
         
         // fish glb animation: swimming animation (only rotation/scale, no translation)
         setGLBAnimation(fishMeshfile, 0.0f, 0.0f, 0, true, true);
     }
+
+    // ensure everything is visible at start
+    resetVisibility();
 }
 
 void AnimationDirector::update(float deltaSec) {
@@ -160,6 +176,21 @@ void AnimationDirector::update(float deltaSec) {
         if (m_autoStopTime >= 0.f && m_currentTime >= m_autoStopTime) {
             m_currentTime = m_autoStopTime;
             m_playing = false;
+        }
+    }
+
+    // collision check: titan vs fish
+    if (m_titanIndex != SIZE_MAX && m_fishIndex != SIZE_MAX &&
+        isShapeVisible(m_fishIndex)) {
+        glm::mat4 titanMat = evaluatePathAnimation(m_titanIndex, m_currentTime);
+        glm::mat4 fishMat = evaluatePathAnimation(m_fishIndex, m_currentTime);
+        glm::vec3 titanPos = extractPosition(titanMat);
+        glm::vec3 fishPos = extractPosition(fishMat);
+
+        const float collisionDistance = 1.0f;
+        if (glm::length(titanPos - fishPos) <= collisionDistance) {
+            hideShape(m_fishIndex);
+            std::cout << "[Animation] Titan touched fish -> fish hidden" << std::endl;
         }
     }
 }
@@ -179,6 +210,7 @@ void AnimationDirector::pause() {
 void AnimationDirector::reset() {
     m_currentTime = 0.f;
     m_playing = true;
+    resetVisibility();
 }
 
 float AnimationDirector::getCurrentTime() const {
@@ -437,5 +469,61 @@ void AnimationDirector::setAutoStopTime(float timeSec) {
     m_autoStopTime = timeSec;
     if (m_autoStopTime < 0.f) {
         m_playing = true;
+    }
+}
+
+bool AnimationDirector::isShapeVisible(size_t shapeIndex) const {
+    return m_hiddenShapes.find(shapeIndex) == m_hiddenShapes.end();
+}
+
+glm::vec3 AnimationDirector::extractPosition(const glm::mat4& transform) const {
+    // translation is stored in the 4th column of the matrix
+    return glm::vec3(transform[3]);
+}
+
+void AnimationDirector::hideShape(size_t shapeIndex) {
+    m_hiddenShapes.insert(shapeIndex);
+    // disable path animation if present
+    auto pathIt = m_pathAnimations.find(shapeIndex);
+    if (pathIt != m_pathAnimations.end()) {
+        pathIt->second.enabled = false;
+    }
+
+    // disable glb animation for this shape if we know its meshfile
+    auto meshIt = m_shapeIndexToMeshfile.find(shapeIndex);
+    if (meshIt != m_shapeIndexToMeshfile.end()) {
+        auto glbIt = m_glbAnimations.find(meshIt->second);
+        if (glbIt != m_glbAnimations.end()) {
+            glbIt->second.enabled = false;
+        }
+    }
+}
+
+void AnimationDirector::resetVisibility() {
+    m_hiddenShapes.clear();
+    // re-enable animations for titan & fish
+    if (m_fishIndex != SIZE_MAX) {
+        auto fishAnim = m_pathAnimations.find(m_fishIndex);
+        if (fishAnim != m_pathAnimations.end()) {
+            fishAnim->second.enabled = true;
+        }
+        if (!m_fishMeshfile.empty()) {
+            auto it = m_glbAnimations.find(m_fishMeshfile);
+            if (it != m_glbAnimations.end()) {
+                it->second.enabled = true;
+            }
+        }
+    }
+    if (m_titanIndex != SIZE_MAX) {
+        auto titanAnim = m_pathAnimations.find(m_titanIndex);
+        if (titanAnim != m_pathAnimations.end()) {
+            titanAnim->second.enabled = true;
+        }
+        if (!m_titanMeshfile.empty()) {
+            auto it = m_glbAnimations.find(m_titanMeshfile);
+            if (it != m_glbAnimations.end()) {
+                it->second.enabled = true;
+            }
+        }
     }
 }
