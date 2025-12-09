@@ -305,21 +305,20 @@ glm::mat4 AnimationDirector::getTransform(const std::string& meshfile) const {
 }
 
 float AnimationDirector::getGLBAnimationTime(const std::string& meshfile) const {
-    auto it = m_glbAnimations.find(meshfile);
-    if (it != m_glbAnimations.end() && it->second.enabled) {
-        const auto& control = it->second;
-        float baseTime = m_currentTime - control.startTime;
-        float localTime = baseTime * control.speed;  // apply speed multiplier
+    const GLBAnimationControl* control = findGLBAnimationControl(meshfile);
+    if (control) {
+        float baseTime = m_currentTime - control->startTime;
+        float localTime = baseTime * control->speed;  // apply speed multiplier
         
         if (localTime < 0.f) {
             return 0.f;  // animation not started yet
         }
         
-        if (control.duration > 0.f) {
-            if (control.loop) {
-                return std::fmod(localTime, control.duration);
+        if (control->duration > 0.f) {
+            if (control->loop) {
+                return std::fmod(localTime, control->duration);
             } else {
-                return std::min(localTime, control.duration);
+                return std::min(localTime, control->duration);
             }
         } else {
             // duration 0 means loop the full animation duration
@@ -332,21 +331,17 @@ float AnimationDirector::getGLBAnimationTime(const std::string& meshfile) const 
 }
 
 int AnimationDirector::getGLBAnimationIndex(const std::string& meshfile) const {
-    auto it = m_glbAnimations.find(meshfile);
-    if (it != m_glbAnimations.end() && it->second.enabled) {
-        return it->second.animationIndex;
-    }
-    return 0;  // default to first animation
+    const GLBAnimationControl* control = findGLBAnimationControl(meshfile);
+    return control ? control->animationIndex : 0;  // default to first animation
 }
 
 bool AnimationDirector::isGLBAnimationActive(const std::string& meshfile) const {
-    auto it = m_glbAnimations.find(meshfile);
-    if (it != m_glbAnimations.end() && it->second.enabled) {
-        const auto& control = it->second;
-        float localTime = m_currentTime - control.startTime;
-        if (control.duration > 0.f) {
+    const GLBAnimationControl* control = findGLBAnimationControl(meshfile);
+    if (control) {
+        float localTime = m_currentTime - control->startTime;
+        if (control->duration > 0.f) {
             // fixed duration: check if within time range
-            return localTime >= 0.f && (control.loop || localTime <= control.duration);
+            return localTime >= 0.f && (control->loop || localTime <= control->duration);
         } else {
             // duration 0 means loop full animation: always active once started
             return localTime >= 0.f;
@@ -356,18 +351,17 @@ bool AnimationDirector::isGLBAnimationActive(const std::string& meshfile) const 
 }
 
 bool AnimationDirector::shouldIgnoreRootTranslation(const std::string& meshfile) const {
-    auto it = m_glbAnimations.find(meshfile);
-    if (it != m_glbAnimations.end() && it->second.enabled) {
-        return it->second.ignoreRootTranslation;
-    }
-    return false;
+    const GLBAnimationControl* control = findGLBAnimationControl(meshfile);
+    return control ? control->ignoreRootTranslation : false;
 }
 
-bool AnimationDirector::isGLBAnimationPingPong(const std::string& meshfile) const {
+// ANIMATION: helper to find GLB animation control with filename fallback
+// this handles path resolution differences (relative vs absolute paths)
+const GLBAnimationControl* AnimationDirector::findGLBAnimationControl(const std::string& meshfile) const {
     // first try exact match
     auto it = m_glbAnimations.find(meshfile);
     if (it != m_glbAnimations.end() && it->second.enabled) {
-        return it->second.pingPong;
+        return &it->second;
     }
 
     // fallback: match by filename to handle resolved/relative path differences
@@ -381,11 +375,16 @@ bool AnimationDirector::isGLBAnimationPingPong(const std::string& meshfile) cons
         std::transform(storedName.begin(), storedName.end(), storedName.begin(), ::tolower);
 
         if (storedName == queryName && kv.second.enabled) {
-            return kv.second.pingPong;
+            return &kv.second;
         }
     }
 
-    return false;
+    return nullptr;
+}
+
+bool AnimationDirector::isGLBAnimationPingPong(const std::string& meshfile) const {
+    const GLBAnimationControl* control = findGLBAnimationControl(meshfile);
+    return control ? control->pingPong : false;
 }
 
 void AnimationDirector::printAnimationInfo() const {

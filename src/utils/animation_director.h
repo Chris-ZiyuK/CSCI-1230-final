@@ -135,6 +135,8 @@ private:
     glm::vec3 extractPosition(const glm::mat4& transform) const;
     void hideShape(size_t shapeIndex);
     void resetVisibility();
+    // ANIMATION: helper to find GLB animation control with filename fallback
+    const GLBAnimationControl* findGLBAnimationControl(const std::string& meshfile) const;
     
     // data storage
     std::unordered_map<size_t, PathAnimation> m_pathAnimations;
