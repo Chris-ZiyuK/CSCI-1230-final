@@ -165,10 +165,10 @@ void AnimationDirector::setupTitanFishAnimation() {
         
         // titan glb animation: play continuously (only rotation/scale, no translation)
         // duration=0 means loop the full animation duration
-        // speed=0.2 means play at 20% speed (slower)
+        // speed=0.6 means play at 60% speed (slower)
         // pingPong=true means play forward then backward for smooth looping
-        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.2f, true);
-        std::cout << "[Animation] Titan GLB animation: speed=0.2x, ping-pong mode enabled for smooth looping" << std::endl;
+        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.6f, true);
+        std::cout << "[Animation] Titan GLB animation: speed=0.32x, ping-pong mode enabled for smooth looping" << std::endl;
     } else {
         std::cout << "[Animation] WARNING: Titan not found!" << std::endl;
     }

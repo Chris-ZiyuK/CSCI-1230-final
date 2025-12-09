@@ -111,6 +111,13 @@ private:
 
     float m_scrollTime = 0.f;
     float m_bgScrollOffset = 0.f;
+    glm::vec3 m_prevCamPos = glm::vec3(0.f);
+    float m_prevBgScrollOffset = 0.f;
+    bool m_firstFrame = true;
+    // For motion blur: track a representative moving object (fish)
+    int m_fishShapeIndex = -1;
+    glm::vec2 m_prevFishUV = glm::vec2(0.f);
+    bool m_prevFishUVValid = false;
 
     // For monster
     std::unordered_map<std::string, GLBModel> m_glbModels;

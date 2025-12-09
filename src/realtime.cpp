@@ -535,6 +535,47 @@ void Realtime::paintGL() {
 
     glUseProgram(m_screenShader);
 
+    // motion vector for screen-space blur (approx from camera + bg scroll)
+    glm::vec3 currentCamPos = glm::vec3(m_renderData.cameraData.pos);
+    if (m_animationDirector.isCameraAnimated()) {
+        currentCamPos = glm::vec3(view[3]); // extract translation from view^-1? view is not inverted
+        // fallback: use render data pos when animated
+        currentCamPos = glm::vec3(m_renderData.cameraData.pos);
+    }
+    glm::vec2 camDelta = glm::vec2(currentCamPos.x - m_prevCamPos.x,
+                                   currentCamPos.z - m_prevCamPos.z);
+    float bgDelta = m_bgScrollOffset - m_prevBgScrollOffset;
+
+    glm::vec2 motionVec(0.f);
+    float camLen = glm::length(camDelta);
+    if (!m_firstFrame && camLen > 1e-5f) {
+        // only blur when camera moves; background scroll alone won't blur
+        motionVec = camDelta * 0.3f + glm::vec2(bgDelta * 6.0f, 0.0f);
+    }
+
+    // fish screen-space velocity, additive but softer
+    if (m_fishShapeIndex >= 0) {
+        glm::mat4 fishMat = m_animationDirector.getTransform(static_cast<size_t>(m_fishShapeIndex));
+        glm::vec3 fishPos = glm::vec3(fishMat[3]);
+        glm::vec4 clip = proj * view * glm::vec4(fishPos, 1.0f);
+        if (clip.w != 0.f) {
+            glm::vec2 uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + glm::vec2(0.5f);
+            if (m_prevFishUVValid) {
+                glm::vec2 fishDelta = uv - m_prevFishUV;
+                float fishLen = glm::length(fishDelta);
+                if (fishLen > 1e-5f) {
+                    motionVec += fishDelta * 0.28f;
+                }
+            }
+            m_prevFishUV = uv;
+            m_prevFishUVValid = true;
+        }
+    }
+
+    float motionLen = glm::length(motionVec);
+    glm::vec2 motionDir = motionLen > 1e-5f ? motionVec / motionLen : glm::vec2(0.f);
+    float motionAmount = glm::clamp(motionLen, 0.f, 0.08f); // softer cap
+
     // sceneTex
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_sceneColorTex);
@@ -551,10 +592,21 @@ void Realtime::paintGL() {
     if (GLint loc = glGetUniformLocation(m_screenShader, "bloomStrength"); loc != -1) {
         glUniform1f(loc, settings.bloomStrength);
     }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "motionUV"); loc != -1) {
+        glUniform2f(loc, motionDir.x, motionDir.y);
+    }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "motionAmount"); loc != -1) {
+        glUniform1f(loc, motionAmount);
+    }
 
     glBindVertexArray(m_quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    // update history for next frame
+    m_prevCamPos = currentCamPos;
+    m_prevBgScrollOffset = m_bgScrollOffset;
+    m_firstFrame = false;
 }
 
 void Realtime::resizeGL(int w, int h) {
@@ -640,11 +692,25 @@ void Realtime::sceneChanged() {
     } else {
         m_animationDirector.reset();
     }
+    // cache fish shape index for motion blur tracking
+    m_fishShapeIndex = -1;
+    for (size_t i = 0; i < m_renderData.shapes.size(); ++i) {
+        const auto &shape = m_renderData.shapes[i];
+        if (shape.primitive.type == PrimitiveType::PRIMITIVE_MESH &&
+            shape.primitive.meshfile.find("alien_fish") != std::string::npos) {
+            m_fishShapeIndex = static_cast<int>(i);
+            break;
+        }
+    }
     // ANIMATION: play once on load (no auto-stop to let titan exit)
     m_animationDirector.reset();
     m_animationDirector.setAutoStopTime(-1.f);
     m_animationDirector.play();
     m_glbAnimTime = 0.f;
+    m_prevCamPos = glm::vec3(m_renderData.cameraData.pos);
+    m_prevBgScrollOffset = m_bgScrollOffset;
+    m_firstFrame = true;
+    m_prevFishUVValid = false;
 
     // Update camera parameters
     m_camera.setCameraData(
@@ -1343,10 +1409,10 @@ void Realtime::updateGlbAnimations(float deltaSec) {
                         bool significantChange = std::abs(outputTime - lastDebugOutputTime) > 0.5f;
                         
                         if ((nearTransition || significantChange) && std::abs(cycleTime - lastDebugCycleTime) > 0.1f) {
-                            std::cout << "[Animation] Ping-pong: input=" << inputTime 
-                                      << ", cycleTime=" << cycleTime 
-                                      << ", output=" << outputTime 
-                                      << ", duration=" << duration << std::endl;
+                            // std::cout << "[Animation] Ping-pong: input=" << inputTime
+                            //           << ", cycleTime=" << cycleTime
+                            //           << ", output=" << outputTime
+                            //           << ", duration=" << duration << std::endl;
                             lastDebugCycleTime = cycleTime;
                             lastDebugOutputTime = outputTime;
                         }

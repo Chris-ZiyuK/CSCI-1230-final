@@ -865,18 +865,18 @@ static bool processSkin(const tinygltf::Model& gltfModel, GLBModel& model) {
     std::cout << "  Total joints: " << model.skin.joints.size() << std::endl;
     
     // Print first 10 joints and their hierarchy
-    std::cout << "  Joint hierarchy (first 10):" << std::endl;
-    for (size_t i = 0; i < std::min(model.skin.joints.size(), size_t(10)); ++i) {
-        const auto& joint = model.skin.joints[i];
-        std::cout << "    Joint " << i << " (" << joint.name << "): parent=" << joint.parentIndex 
-                  << ", children=[";
-        for (size_t j = 0; j < std::min(joint.children.size(), size_t(5)); ++j) {
-            std::cout << joint.children[j];
-            if (j < joint.children.size() - 1 && j < 4) std::cout << ", ";
-        }
-        if (joint.children.size() > 5) std::cout << "...";
-        std::cout << "]" << std::endl;
-    }
+    // std::cout << "  Joint hierarchy (first 10):" << std::endl;
+    // for (size_t i = 0; i < std::min(model.skin.joints.size(), size_t(10)); ++i) {
+    //     const auto& joint = model.skin.joints[i];
+    //     std::cout << "    Joint " << i << " (" << joint.name << "): parent=" << joint.parentIndex
+    //               << ", children=[";
+    //     for (size_t j = 0; j < std::min(joint.children.size(), size_t(5)); ++j) {
+    //         std::cout << joint.children[j];
+    //         if (j < joint.children.size() - 1 && j < 4) std::cout << ", ";
+    //     }
+    //     if (joint.children.size() > 5) std::cout << "...";
+    //     std::cout << "]" << std::endl;
+    // }
     
     // Count joints with no parent (should be 1 for root)
     int rootCount = 0;

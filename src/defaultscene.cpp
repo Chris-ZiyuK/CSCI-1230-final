@@ -17,7 +17,7 @@ glm::vec3 randomStarHue(std::mt19937 &rng) {
 void addStarField(RenderData &renderData, int count,
                   float scaleMin, float scaleMax,
                   float emissiveMin, float emissiveMax) {
-    std::mt19937 rng(20250144+ static_cast<int>((scaleMin + scaleMax) * 1000));
+    std::mt19937 rng(20251125+ static_cast<int>((scaleMin + scaleMax) * 1000));
 
     // Sample stars uniformly on a spherical shell around the camera
     const glm::vec3 starCenter(0.f, 0.f, 5.f);
