@@ -188,6 +188,16 @@ private:
     bool m_cameraSwitchActive = false;
     float m_cameraSwitchStartTime = -1.f;
     float m_cameraSwitchDuration = 3.0f; // seconds to blend to titan-centered shot
+    // pull back camera after titan original path ends
+    bool m_cameraPullbackActive = false;
+    bool m_cameraPullbackFinished = false;
+    float m_cameraPullbackStartTime = -1.f;
+    float m_cameraPullbackDuration = 2.0f; // seconds to pull back
+    float m_cameraPullbackExtraRadius = 3.0f; // extra distance while pulling back
+    float m_titanPathEndTime = 10.0f; // original titan path end time
+    mutable bool m_cameraHoldAfterPullback = false;
+    mutable glm::vec3 m_cameraHoldPos = glm::vec3(0.f);
+    mutable glm::vec3 m_cameraHoldLook = glm::vec3(0.f, 0.f, -1.f);
     
     // cached last position when target is hidden (mutable for caching in const method)
     mutable glm::vec3 m_cameraLastTargetPos = glm::vec3(0.f, 0.f, 0.f);

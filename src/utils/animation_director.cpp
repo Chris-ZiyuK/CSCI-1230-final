@@ -29,6 +29,12 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_cameraUseLastPos = false;
     m_cameraSwitchActive = false;
     m_cameraSwitchStartTime = -1.f;
+    m_cameraPullbackActive = false;
+    m_cameraPullbackFinished = false;
+    m_cameraPullbackStartTime = -1.f;
+    m_cameraHoldAfterPullback = false;
+    m_cameraHoldPos = glm::vec3(0.f);
+    m_cameraHoldLook = glm::vec3(0.f, 0.f, -1.f);
     
     // build meshfile to shape index mapping
     for (size_t i = 0; i < renderData.shapes.size(); ++i) {
@@ -147,9 +153,12 @@ void AnimationDirector::setupTitanFishAnimation() {
         m_titanMeshfile = titanMeshfile;
         std::cout << "[Animation] Setting up titan animation at index " << titanIndex << std::endl;
         std::cout << "[Animation] Titan scale: " << getModelScale(titanMeshfile) << std::endl;
+        m_titanPathEndTime = 10.0f; // original path end (for pullback trigger)
         std::vector<PathKeyframe> titanKeyframes = {
             {0.0f, glm::vec3(-18.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
             {10.0f, glm::vec3(16.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+            // extend with same speed to fly out of screen to the right
+            {22.0f, glm::vec3(56.8f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
         };
         // loop disabled: titan path ends after duration
         addPathAnimation(titanIndex, titanKeyframes, false);
@@ -236,6 +245,19 @@ void AnimationDirector::update(float deltaSec) {
             m_cameraSwitchActive = false;
         }
     }
+
+    // trigger pullback after original titan path end
+    if (!m_cameraPullbackActive && !m_cameraPullbackFinished &&
+        m_currentTime >= m_titanPathEndTime) {
+        m_cameraPullbackActive = true;
+        m_cameraPullbackStartTime = m_currentTime;
+    }
+    if (m_cameraPullbackActive && m_cameraPullbackDuration > 0.f && m_cameraPullbackStartTime >= 0.f) {
+        if ((m_currentTime - m_cameraPullbackStartTime) >= m_cameraPullbackDuration) {
+            m_cameraPullbackActive = false;
+            m_cameraPullbackFinished = true;
+        }
+    }
 }
 
 void AnimationDirector::setTime(float time) {
@@ -256,6 +278,10 @@ void AnimationDirector::reset() {
     resetVisibility();
     m_cameraSwitchActive = false;
     m_cameraSwitchStartTime = -1.f;
+    m_cameraPullbackActive = false;
+    m_cameraPullbackFinished = false;
+    m_cameraPullbackStartTime = -1.f;
+    m_cameraHoldAfterPullback = false;
 }
 
 bool AnimationDirector::isPlaying() const {
@@ -850,15 +876,29 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
             offset = glm::mix(m_cameraStartOffset, m_cameraEndOffset, t);
         }
         
+        // apply pullback after titan main path ends: increase distance, then lock camera
+        if (m_cameraPullbackActive || m_cameraPullbackFinished) {
+            float pullT = 1.f;
+            if (m_cameraPullbackActive && m_cameraPullbackDuration > 0.f && m_cameraPullbackStartTime >= 0.f) {
+                pullT = std::clamp((m_currentTime - m_cameraPullbackStartTime) / m_cameraPullbackDuration, 0.f, 1.f);
+            }
+            offset += glm::vec3(0.f, 0.f, m_cameraPullbackExtraRadius * pullT);
+        }
+
         glm::vec3 cameraPos = targetPos + offset;
-        glm::vec3 lookDir;
-        
-        if (m_cameraLookAtTarget) {
-            // always look at target
-            lookDir = glm::normalize(targetPos - cameraPos);
-        } else {
-            // use default forward direction
-            lookDir = glm::normalize(-offset);
+        glm::vec3 lookDir = m_cameraLookAtTarget
+            ? glm::normalize(targetPos - cameraPos)
+            : glm::normalize(-offset);
+
+        // once pullback finishes, freeze camera
+        if (m_cameraPullbackFinished && !m_cameraHoldAfterPullback) {
+            m_cameraHoldAfterPullback = true;
+            m_cameraHoldPos = cameraPos;
+            m_cameraHoldLook = lookDir;
+        }
+        if (m_cameraHoldAfterPullback) {
+            cameraPos = m_cameraHoldPos;
+            lookDir = m_cameraHoldLook;
         }
         
         // debug: print camera position when switched to titan

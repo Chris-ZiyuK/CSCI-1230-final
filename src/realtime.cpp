@@ -640,9 +640,9 @@ void Realtime::sceneChanged() {
     } else {
         m_animationDirector.reset();
     }
-    // ANIMATION: play once on load, then pause at end of path
+    // ANIMATION: play once on load (no auto-stop to let titan exit)
     m_animationDirector.reset();
-    m_animationDirector.setAutoStopTime(m_animationDirector.getMaxPathDuration());
+    m_animationDirector.setAutoStopTime(-1.f);
     m_animationDirector.play();
     m_glbAnimTime = 0.f;
 
@@ -1388,7 +1388,7 @@ void Realtime::deleteGlbResources() {
 // ANIMATION: reset animation timer
 void Realtime::resetAnimation() {
     m_animationDirector.reset();
-    m_animationDirector.setAutoStopTime(m_animationDirector.getMaxPathDuration());
+    m_animationDirector.setAutoStopTime(-1.f);
     m_animationDirector.play();
     m_glbAnimTime = 0.f;
     std::cout << "[Animation] Animation reset" << std::endl;
