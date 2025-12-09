@@ -111,11 +111,13 @@ void AnimationDirector::setupTitanFishAnimation() {
     }
     
     // setup model scales for unified sizing
-    // titan: larger scale to make it visible
-    // fish: keep at 0.1f
+    // titan: keep current visibility scale
+    // fish: shrink to 50%
+    // whale: shrink to 10%
     // these scales are relative multipliers applied in drawMeshPrimitive
-    setModelScale("titan", 0.02f);  // increased scale for better visibility
-    setModelScale("alien_fish", 0.1f);
+    setModelScale("titan", 0.02f);        // make titan more visible
+    setModelScale("alien_fish", 0.2f);    // fish at 50% of original
+    setModelScale("glow_whale", 0.1f);    // whale at 10% of original
     
     // setup titan path animation: move from left to right
     // note: scale and rotation in keyframes are relative, model-specific adjustments applied separately

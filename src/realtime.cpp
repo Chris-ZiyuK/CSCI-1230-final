@@ -252,6 +252,10 @@ void Realtime::initializeGL() {
     // =============================
     createDefaultScene(m_renderData);
     buildVAOsFromRenderData();
+    // Ensure default scene uses correct transforms (sky sphere scale, stars, etc.)
+    m_animationDirector.initialize(m_renderData);
+    m_animationDirector.reset();
+    m_glbAnimTime = 0.f;
 
     // Initialize camera
     m_camera.setCameraData(
@@ -581,36 +585,38 @@ void Realtime::sceneChanged() {
     // buildVAOsFromRenderData();
 
 
-    // For monster
-    if (m_sceneFilePath.empty()) {
-        std::cerr << "No scene file specified." << std::endl;
-        return;
-    }
-
-    // ANIMATION: load single scene file (can contain multiple objects)
-    RenderData parsed;
-    if (!SceneParser::parse(m_sceneFilePath, parsed)) {
-        std::cerr << "Failed to parse scene: " << m_sceneFilePath << std::endl;
-        return;
-    }
-
-    // use the default starry sky scene as the base
+    // Always start from the starry-sky base scene
     RenderData combined;
     createDefaultScene(combined);
 
-    // Lighting and shape: Add the content in the JSON on the basis of the starry sky scene
-    combined.lights.insert(combined.lights.end(),
-                           parsed.lights.begin(), parsed.lights.end());
-    combined.shapes.insert(combined.shapes.end(),
-                           parsed.shapes.begin(), parsed.shapes.end());
-
-    m_renderData = std::move(combined);
+    if (m_sceneFilePath.empty()) {
+        std::cout << "No scene file specified. Showing default starfield only." << std::endl;
+        m_renderData = std::move(combined);
+    } else {
+        // ANIMATION: load single scene file (can contain multiple objects)
+        RenderData parsed;
+        if (!SceneParser::parse(m_sceneFilePath, parsed)) {
+            std::cerr << "Failed to parse scene: " << m_sceneFilePath
+                      << ". Falling back to default starfield." << std::endl;
+            m_renderData = std::move(combined);
+        } else {
+            // Lighting and shape: Add the content in the JSON on the basis of the starry sky scene
+            combined.lights.insert(combined.lights.end(),
+                                   parsed.lights.begin(), parsed.lights.end());
+            combined.shapes.insert(combined.shapes.end(),
+                                   parsed.shapes.begin(), parsed.shapes.end());
+            m_renderData = std::move(combined);
+        }
+    }
 
     // ANIMATION: initialize animation director
     m_animationDirector.initialize(m_renderData);
-    m_animationDirector.setupTitanFishAnimation();
+    if (!m_sceneFilePath.empty()) {
+        m_animationDirector.setupTitanFishAnimation();
+    } else {
+        m_animationDirector.reset();
+    }
     // ANIMATION: reset timer when scene is loaded (start from beginning)
-    m_animationDirector.reset();
     m_glbAnimTime = 0.f;
 
     // Update camera parameters

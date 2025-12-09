@@ -92,6 +92,10 @@ public:
     float getModelScale(const std::string& meshfile) const;
     void setModelScale(const std::string& meshfile, float scale);
     
+    // playback helpers
+    float getMaxPathDuration() const;
+    void setAutoStopTime(float timeSec);
+    
 private:
     // internal implementation
     glm::mat4 evaluatePathAnimation(size_t shapeIndex, float time) const;
@@ -105,5 +109,6 @@ private:
     
     float m_currentTime = 0.f;
     bool m_playing = true;
+    float m_autoStopTime = -1.f;  // >=0 means stop when time reaches this
     const RenderData* m_renderData = nullptr;
 };
