@@ -64,7 +64,7 @@ void MainWindow::initialize() {
     
     saveImage = new QPushButton();
     saveImage->setText(QStringLiteral("Save Image"));
-    
+
     // ANIMATION: create play button
     playButton = new QPushButton();
     playButton->setText(QStringLiteral("Play Animation"));

@@ -5,6 +5,8 @@
 #include <cctype>
 #include <set>
 #include <map>
+#include <cmath>
+#include <filesystem>
 
 void AnimationDirector::initialize(const RenderData& renderData) {
     m_renderData = &renderData;
@@ -17,6 +19,14 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_fishIndex = SIZE_MAX;
     m_titanMeshfile.clear();
     m_fishMeshfile.clear();
+    
+    // reset camera animation
+    m_cameraFollowTarget = false;
+    m_cameraPathEnabled = false;
+    m_cameraAnimatedOffset = false;
+    m_cameraWideShot = false;
+    m_cameraOrbitMode = false;
+    m_cameraUseLastPos = false;
     
     // build meshfile to shape index mapping
     for (size_t i = 0; i < renderData.shapes.size(); ++i) {
@@ -68,7 +78,8 @@ void AnimationDirector::setGLBAnimation(const std::string& meshfile,
                                        int animIndex,
                                        bool loop,
                                        bool ignoreRootTranslation,
-                                       float speed) {
+                                       float speed,
+                                       bool pingPong) {
     GLBAnimationControl control;
     control.startTime = startTime;
     control.duration = duration;
@@ -77,6 +88,7 @@ void AnimationDirector::setGLBAnimation(const std::string& meshfile,
     control.enabled = true;
     control.ignoreRootTranslation = ignoreRootTranslation;
     control.speed = speed;
+    control.pingPong = pingPong;
     
     m_glbAnimations[meshfile] = control;
 }
@@ -141,9 +153,10 @@ void AnimationDirector::setupTitanFishAnimation() {
         
         // titan glb animation: play continuously (only rotation/scale, no translation)
         // duration=0 means loop the full animation duration
-        // speed=0.5 means play at half speed (slower)
-        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.2f);
-        std::cout << "[Animation] Titan GLB animation speed set to 0.5x (half speed)" << std::endl;
+        // speed=0.2 means play at 20% speed (slower)
+        // pingPong=true means play forward then backward for smooth looping
+        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.2f, true);
+        std::cout << "[Animation] Titan GLB animation: speed=0.2x, ping-pong mode enabled for smooth looping" << std::endl;
     } else {
         std::cout << "[Animation] WARNING: Titan not found!" << std::endl;
     }
@@ -168,6 +181,21 @@ void AnimationDirector::setupTitanFishAnimation() {
 
     // ensure everything is visible at start
     resetVisibility();
+    
+    // setup dramatic camera movement: orbit from front to side while following fish
+    if (fishIndex != SIZE_MAX) {
+        // fish animation duration is 10 seconds
+        // camera orbits from front (0°) to side (90°) in 1/4 circle
+        // simultaneously follows fish's translation
+        setCameraOrbitTarget(fishIndex,
+                           5.f,      // radius: 5 units from fish
+                           0.f,      // start: front (0°)
+                           90.f,     // end: right side (90°)
+                           10.f,     // orbit duration: 10 seconds (full fish animation)
+                           glm::vec3(0.f, 1.f, 0.f));  // vertical offset: slightly above
+        
+        std::cout << "[Animation] Camera setup: orbit from front to side while following fish" << std::endl;
+    }
 }
 
 void AnimationDirector::update(float deltaSec) {
@@ -211,6 +239,10 @@ void AnimationDirector::reset() {
     m_currentTime = 0.f;
     m_playing = true;
     resetVisibility();
+}
+
+bool AnimationDirector::isPlaying() const {
+    return m_playing;
 }
 
 float AnimationDirector::getCurrentTime() const {
@@ -285,6 +317,31 @@ bool AnimationDirector::shouldIgnoreRootTranslation(const std::string& meshfile)
     if (it != m_glbAnimations.end() && it->second.enabled) {
         return it->second.ignoreRootTranslation;
     }
+    return false;
+}
+
+bool AnimationDirector::isGLBAnimationPingPong(const std::string& meshfile) const {
+    // first try exact match
+    auto it = m_glbAnimations.find(meshfile);
+    if (it != m_glbAnimations.end() && it->second.enabled) {
+        return it->second.pingPong;
+    }
+
+    // fallback: match by filename to handle resolved/relative path differences
+    std::filesystem::path queryPath(meshfile);
+    std::string queryName = queryPath.filename().string();
+    std::transform(queryName.begin(), queryName.end(), queryName.begin(), ::tolower);
+
+    for (const auto& kv : m_glbAnimations) {
+        std::filesystem::path storedPath(kv.first);
+        std::string storedName = storedPath.filename().string();
+        std::transform(storedName.begin(), storedName.end(), storedName.begin(), ::tolower);
+
+        if (storedName == queryName && kv.second.enabled) {
+            return kv.second.pingPong;
+        }
+    }
+
     return false;
 }
 
@@ -526,4 +583,265 @@ void AnimationDirector::resetVisibility() {
             }
         }
     }
+}
+
+// camera animation implementation
+void AnimationDirector::setCameraFollowTarget(size_t targetShapeIndex,
+                                             const glm::vec3& offset,
+                                             bool followPosition,
+                                             bool lookAtTarget) {
+    m_cameraFollowTarget = true;
+    m_cameraTargetIndex = targetShapeIndex;
+    m_cameraOffset = offset;
+    m_cameraFollowPosition = followPosition;
+    m_cameraLookAtTarget = lookAtTarget;
+    m_cameraPathEnabled = false;
+    m_cameraAnimatedOffset = false;
+    std::cout << "[Animation] Camera set to follow target shape " << targetShapeIndex 
+              << " with offset (" << offset.x << ", " << offset.y << ", " << offset.z << ")" << std::endl;
+}
+
+void AnimationDirector::setCameraFollowWithAnimatedOffset(size_t targetShapeIndex,
+                                                         const glm::vec3& startOffset,
+                                                         const glm::vec3& endOffset,
+                                                         float transitionStartTime,
+                                                         float transitionDuration) {
+    m_cameraFollowTarget = true;
+    m_cameraTargetIndex = targetShapeIndex;
+    m_cameraAnimatedOffset = true;
+    m_cameraStartOffset = startOffset;
+    m_cameraEndOffset = endOffset;
+    m_cameraOffsetStartTime = transitionStartTime;
+    m_cameraOffsetDuration = transitionDuration;
+    m_cameraFollowPosition = true;
+    m_cameraLookAtTarget = true;
+    m_cameraPathEnabled = false;
+    m_cameraOrbitMode = false;
+    std::cout << "[Animation] Camera set to follow target with animated offset: "
+              << "start=(" << startOffset.x << ", " << startOffset.y << ", " << startOffset.z << "), "
+              << "end=(" << endOffset.x << ", " << endOffset.y << ", " << endOffset.z << "), "
+              << "duration=" << transitionDuration << "s" << std::endl;
+}
+
+void AnimationDirector::setCameraOrbitTarget(size_t targetShapeIndex,
+                                            float radius,
+                                            float startAngle,
+                                            float endAngle,
+                                            float orbitDuration,
+                                            const glm::vec3& verticalOffset) {
+    m_cameraFollowTarget = true;
+    m_cameraTargetIndex = targetShapeIndex;
+    m_cameraOrbitMode = true;
+    m_cameraOrbitRadius = radius;
+    m_cameraOrbitStartAngle = startAngle;
+    m_cameraOrbitEndAngle = endAngle;
+    m_cameraOrbitDuration = orbitDuration;
+    m_cameraOrbitVerticalOffset = verticalOffset;
+    m_cameraFollowPosition = true;
+    m_cameraLookAtTarget = true;
+    m_cameraPathEnabled = false;
+    m_cameraAnimatedOffset = false;
+    std::cout << "[Animation] Camera set to orbit target: radius=" << radius 
+              << ", angle " << startAngle << "° to " << endAngle << "°"
+              << ", duration=" << orbitDuration << "s" << std::endl;
+}
+
+void AnimationDirector::setCameraPath(const std::vector<PathKeyframe>& keyframes, bool loop) {
+    m_cameraPath.keyframes = keyframes;
+    m_cameraPath.loop = loop;
+    m_cameraPath.enabled = true;
+    m_cameraPathEnabled = true;
+    m_cameraFollowTarget = false;
+    
+    if (!keyframes.empty()) {
+        m_cameraPath.duration = keyframes.back().time;
+    }
+    std::cout << "[Animation] Camera path set with " << keyframes.size() 
+              << " keyframes, duration=" << m_cameraPath.duration << "s" << std::endl;
+}
+
+std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
+    if (m_cameraPathEnabled && m_cameraPath.enabled && !m_cameraPath.keyframes.empty()) {
+        // use camera path animation
+        float animTime = getLocalTime(m_currentTime, m_cameraPath);
+        
+        // find keyframe interval (similar to evaluatePathAnimation)
+        if (m_cameraPath.keyframes.size() == 1) {
+            const PathKeyframe& kf = m_cameraPath.keyframes[0];
+            glm::vec3 pos = kf.position;
+            // rotation to look direction (simplified: use rotation as look direction offset)
+            glm::vec3 lookDir = glm::normalize(glm::vec3(
+                cos(glm::radians(kf.rotation.y)) * cos(glm::radians(kf.rotation.x)),
+                sin(glm::radians(kf.rotation.x)),
+                sin(glm::radians(kf.rotation.y)) * cos(glm::radians(kf.rotation.x))
+            ));
+            return {pos, lookDir};
+        }
+        
+        size_t keyframeIndex = 0;
+        bool foundInterval = false;
+        for (size_t i = 0; i < m_cameraPath.keyframes.size() - 1; ++i) {
+            if (animTime >= m_cameraPath.keyframes[i].time && 
+                animTime <= m_cameraPath.keyframes[i + 1].time) {
+                keyframeIndex = i;
+                foundInterval = true;
+                break;
+            }
+        }
+        
+        if (!foundInterval) {
+            // use last keyframe
+            const PathKeyframe& kf = m_cameraPath.keyframes.back();
+            glm::vec3 pos = kf.position;
+            glm::vec3 lookDir = glm::normalize(glm::vec3(
+                cos(glm::radians(kf.rotation.y)) * cos(glm::radians(kf.rotation.x)),
+                sin(glm::radians(kf.rotation.x)),
+                sin(glm::radians(kf.rotation.y)) * cos(glm::radians(kf.rotation.x))
+            ));
+            return {pos, lookDir};
+        }
+        
+        // interpolate
+        const PathKeyframe& kf1 = m_cameraPath.keyframes[keyframeIndex];
+        const PathKeyframe& kf2 = m_cameraPath.keyframes[keyframeIndex + 1];
+        float t = 0.f;
+        if (kf2.time > kf1.time) {
+            t = (animTime - kf1.time) / (kf2.time - kf1.time);
+            t = std::max(0.f, std::min(1.f, t));
+        }
+        
+        glm::vec3 pos = glm::mix(kf1.position, kf2.position, t);
+        glm::vec3 rot = glm::mix(kf1.rotation, kf2.rotation, t);
+        glm::vec3 lookDir = glm::normalize(glm::vec3(
+            cos(glm::radians(rot.y)) * cos(glm::radians(rot.x)),
+            sin(glm::radians(rot.x)),
+            sin(glm::radians(rot.y)) * cos(glm::radians(rot.x))
+        ));
+        return {pos, lookDir};
+    } else if (m_cameraWideShot && m_currentTime >= m_cameraWideShotStartTime) {
+        // wide shot: fixed position looking at scene
+        return {m_cameraWideShotPos, m_cameraWideShotLook};
+    } else if (m_cameraFollowTarget && m_cameraTargetIndex != SIZE_MAX) {
+        // follow target object
+        glm::vec3 targetPos;
+        size_t actualTargetIndex = m_cameraTargetIndex;
+        bool switchedToTitan = false;
+        
+        // check if target is still visible
+        if (!isShapeVisible(m_cameraTargetIndex)) {
+            // target is hidden, switch to titan if available
+            if (m_titanIndex != SIZE_MAX && isShapeVisible(m_titanIndex)) {
+                // switch to follow titan from the side
+                actualTargetIndex = m_titanIndex;
+                switchedToTitan = true;
+                glm::mat4 titanTransform = evaluatePathAnimation(m_titanIndex, m_currentTime);
+                targetPos = extractPosition(titanTransform);
+            } else {
+                // no alternative target, use last known position to avoid sudden jump
+                if (m_cameraUseLastPos) {
+                    targetPos = m_cameraLastTargetPos;
+                } else {
+                    // first time target is hidden, get last position before hiding
+                    auto pathIt = m_pathAnimations.find(m_cameraTargetIndex);
+                    if (pathIt != m_pathAnimations.end() && !pathIt->second.keyframes.empty()) {
+                        targetPos = pathIt->second.keyframes.back().position;
+                    } else {
+                        targetPos = m_cameraLastTargetPos;
+                    }
+                    m_cameraLastTargetPos = targetPos;
+                    m_cameraUseLastPos = true;
+                }
+                actualTargetIndex = m_cameraTargetIndex;  // keep original for offset calculation
+            }
+        } else {
+            // target is visible, get current position
+            glm::mat4 targetTransform = evaluatePathAnimation(m_cameraTargetIndex, m_currentTime);
+            targetPos = extractPosition(targetTransform);
+            m_cameraLastTargetPos = targetPos;  // cache current position
+            m_cameraUseLastPos = false;
+        }
+        
+        glm::vec3 offset = m_cameraOffset;
+        
+        if (m_cameraOrbitMode) {
+            // orbit mode: 1/4 circle movement around target
+            float currentAngle;
+            
+            if (switchedToTitan) {
+                // switched to titan, use side view (90°)
+                currentAngle = 90.f;
+            } else {
+                // normal orbit for fish
+                float t = 0.f;
+                if (m_cameraOrbitDuration > 0.f) {
+                    t = m_currentTime / m_cameraOrbitDuration;
+                    t = std::max(0.f, std::min(1.f, t));  // clamp to [0, 1]
+                }
+                currentAngle = glm::mix(m_cameraOrbitStartAngle, m_cameraOrbitEndAngle, t);
+            }
+            
+            float angleRad = glm::radians(currentAngle);
+            
+            // calculate camera position in a circle around target
+            // assuming fish moves along X axis, so orbit in XZ plane
+            // 0° = front (positive Z), 90° = right side (positive X)
+            // for titan: 90° should be from the side (right side of titan)
+            float x = m_cameraOrbitRadius * sin(angleRad);
+            float z = m_cameraOrbitRadius * cos(angleRad);
+            
+            // if following titan, adjust offset to be from the side
+            // titan is rotated 90° around Y axis in drawMeshPrimitive, so its front faces +X direction
+            // for side view, camera should be at titan's right side
+            // titan's right side in world space is +Z direction (when titan faces +X)
+            if (switchedToTitan) {
+                // camera at titan's right side: offset in +Z direction
+                // use larger radius for titan to get better side view
+                float titanSideRadius = m_cameraOrbitRadius * 1.5f;  // 50% further for better view
+                offset = glm::vec3(0.f, m_cameraOrbitVerticalOffset.y, titanSideRadius);
+            } else {
+                offset = glm::vec3(x, m_cameraOrbitVerticalOffset.y, z) + m_cameraOrbitVerticalOffset;
+            }
+        } else if (m_cameraAnimatedOffset) {
+            // interpolate offset over time
+            float t = 0.f;
+            if (m_cameraOffsetDuration > 0.f) {
+                float elapsed = m_currentTime - m_cameraOffsetStartTime;
+                t = elapsed / m_cameraOffsetDuration;
+                t = std::max(0.f, std::min(1.f, t));  // clamp to [0, 1]
+            }
+            offset = glm::mix(m_cameraStartOffset, m_cameraEndOffset, t);
+        }
+        
+        glm::vec3 cameraPos = targetPos + offset;
+        glm::vec3 lookDir;
+        
+        if (m_cameraLookAtTarget) {
+            // always look at target
+            lookDir = glm::normalize(targetPos - cameraPos);
+        } else {
+            // use default forward direction
+            lookDir = glm::normalize(-offset);
+        }
+        
+        // debug: print camera position when switched to titan
+        if (switchedToTitan) {
+            static bool printed = false;
+            if (!printed) {
+                std::cout << "[Animation] Camera switched to titan: pos=(" 
+                          << cameraPos.x << ", " << cameraPos.y << ", " << cameraPos.z 
+                          << "), target=(" << targetPos.x << ", " << targetPos.y << ", " << targetPos.z
+                          << "), offset=(" << offset.x << ", " << offset.y << ", " << offset.z << ")" << std::endl;
+                printed = true;
+            }
+        }
+        
+        return {cameraPos, lookDir};
+    }
+    
+    // no camera animation, return default
+    return {glm::vec3(0.f, 0.f, 5.f), glm::vec3(0.f, 0.f, -1.f)};
+}
+
+bool AnimationDirector::isCameraAnimated() const {
+    return m_cameraPathEnabled || m_cameraFollowTarget || m_cameraWideShot;
 }

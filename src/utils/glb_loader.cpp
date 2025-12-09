@@ -1121,7 +1121,7 @@ bool GLBLoader::updateAnimation(GLBModel& model, float currentTime, int animatio
             
             if (channel.path == "translation") {
                 if (!ignoreRootTranslation || !isRootJoint) {
-                    t = translation;
+                t = translation;
                 }
                 // else: keep bind translation for root joint
             } else if (channel.path == "rotation") {

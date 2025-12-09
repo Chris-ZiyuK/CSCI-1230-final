@@ -291,7 +291,31 @@ void Realtime::paintGL() {
 
     // 4) Upload view & projection matrices derived from the current camera
     float timeSec = m_scrollTime;
-    glm::mat4 view = m_camera.getViewMatrix();
+    
+    // ANIMATION: apply camera animation if enabled
+    glm::mat4 view;
+    if (m_animationDirector.isCameraAnimated()) {
+        auto [cameraPos, lookDir] = m_animationDirector.getCameraTransform();
+        // temporarily update camera to animated position
+        glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
+        glm::vec3 lookAt = cameraPos + lookDir;
+        m_camera.setCameraData(
+            glm::vec4(cameraPos, 1.f),
+            glm::vec4(lookDir, 0.f),
+            glm::vec4(up, 0.f),
+            m_renderData.cameraData.heightAngle
+        );
+        view = m_camera.getViewMatrix();
+        // restore original camera after getting view matrix
+        m_camera.setCameraData(
+            m_renderData.cameraData.pos,
+            m_renderData.cameraData.look,
+            m_renderData.cameraData.up,
+            m_renderData.cameraData.heightAngle
+        );
+    } else {
+        view = m_camera.getViewMatrix();
+    }
     glm::mat4 proj = m_camera.getProjMatrix();
 
     if (GLint uView = glGetUniformLocation(m_shader, "view"); uView != -1) {
@@ -1217,9 +1241,126 @@ void Realtime::updateGlbAnimations(float deltaSec) {
         
         if (m_animationDirector.isGLBAnimationActive(path)) {
             // use animation director timeline
-            float animTime = m_animationDirector.getGLBAnimationTime(path);
+            float inputTime = m_animationDirector.getGLBAnimationTime(path);
             int animIndex = m_animationDirector.getGLBAnimationIndex(path);
             bool ignoreRootTrans = m_animationDirector.shouldIgnoreRootTranslation(path);
+            
+            // ANIMATION: if path animation has stopped, continue GLB animation independently
+            // this ensures GLB animations (like titan's wings) continue looping even after path stops
+            static std::unordered_map<std::string, float> glbIndependentTime;
+            bool isPingPong = m_animationDirector.isGLBAnimationPingPong(path);
+            bool pathStopped = !m_animationDirector.isPlaying();
+            
+            if (isPingPong && pathStopped && animIndex >= 0 && animIndex < static_cast<int>(model.animations.size())) {
+                // path animation stopped, but GLB animation should continue
+                // use independent time that continues to increase
+                float duration = model.animations[animIndex].duration;
+                if (duration > 0.f) {
+                    if (glbIndependentTime.find(path) == glbIndependentTime.end()) {
+                        // initialize with current inputTime
+                        glbIndependentTime[path] = inputTime;
+                    }
+                    // continue updating independent time
+                    glbIndependentTime[path] += deltaSec * 0.2f;  // use titan's speed (0.2x)
+                    inputTime = glbIndependentTime[path];
+                }
+            } else if (!pathStopped) {
+                // path animation is playing, reset independent time if it exists
+                glbIndependentTime.erase(path);
+            }
+            
+            float animTime = inputTime;  // default: use input time as-is
+            
+            // ANIMATION: apply ping-pong mode for smooth looping
+            // note: GLBLoader will mod the time by duration at line 1080
+            // so we need to pass a value that when modded gives us the ping-pong effect
+            if (m_animationDirector.isGLBAnimationPingPong(path) && 
+                animIndex >= 0 && animIndex < static_cast<int>(model.animations.size())) {
+                float duration = model.animations[animIndex].duration;
+                if (duration > 0.f) {
+                    // ping-pong: play forward then backward for smooth looping
+                    // key insight: we need to map continuous inputTime to a ping-pong cycle
+                    // cycle: 0 -> duration (forward) -> 0 (backward) -> duration (forward) ...
+                    // but GLBLoader will mod by duration, so we need to be careful
+                    
+                    // calculate position in ping-pong cycle (period = duration * 2)
+                    float cyclePeriod = duration * 2.f;
+                    float cycleTime = std::fmod(inputTime, cyclePeriod);
+                    if (cycleTime < 0.f) {
+                        cycleTime += cyclePeriod;
+                    }
+                    
+                    // ping-pong mapping for smooth A-B-B-A looping:
+                    // forward: cycleTime in [0, duration) -> output = cycleTime (0 to duration-)
+                    // backward: cycleTime in [duration, duration*2) -> output = duration*2 - cycleTime (duration- to 0+)
+                    // key: at cycleTime = 0 or duration*2, output should be 0 (smooth loop)
+                    //      at cycleTime = duration, output should be duration (peak)
+                    
+                    float outputTime;
+                    if (cycleTime < duration) {
+                        // forward phase: [0, duration) -> [0, duration)
+                        outputTime = cycleTime;
+                    } else {
+                        // backward phase: [duration, duration*2) -> (duration, 0]
+                        // reverseTime = duration*2 - cycleTime
+                        // when cycleTime = duration: reverseTime = duration
+                        // when cycleTime -> duration*2: reverseTime -> 0
+                        outputTime = cyclePeriod - cycleTime;
+                    }
+                    
+                    // critical: GLBLoader does fmod(outputTime, duration) at line 1080
+                    // this means outputTime = duration becomes 0 (causes jump!)
+                    // we need to ensure smooth transitions at boundaries:
+                    // - at cycleTime = 0: outputTime = 0 (start of forward)
+                    // - at cycleTime = duration*2: outputTime = 0 (end of backward, loops to start)
+                    // - at cycleTime = duration: outputTime = duration (peak, but mod wraps to 0!)
+                    
+                    const float epsilon = 0.001f;  // small buffer to avoid exact boundaries
+                    
+                    // handle boundary cases to prevent jumps:
+                    // 1. when outputTime is exactly 0: keep it as 0 (smooth loop point)
+                    // 2. when outputTime is exactly duration: use duration-epsilon (avoid mod wrap)
+                    // 3. when outputTime is very close to 0 but not exactly: keep it (smooth backward end)
+                    if (outputTime >= duration - epsilon) {
+                        // near duration: use duration-epsilon to avoid mod wrap to 0
+                        outputTime = duration - epsilon;
+                    } else if (outputTime < epsilon && outputTime > 0.f) {
+                        // very close to 0 but not exactly: keep small value for smooth backward end
+                        // this ensures smooth transition when cycleTime approaches duration*2
+                        outputTime = std::max(outputTime, 0.0001f);
+                    }
+                    // if outputTime is exactly 0, keep it as 0 (this is the loop point)
+                    
+                    animTime = outputTime;
+                    
+                    // debug: log ping-pong transitions (only for titan, reduce spam)
+                    static float lastDebugCycleTime = -1.f;
+                    static float lastDebugOutputTime = -1.f;
+                    if (path.find("titan") != std::string::npos) {
+                        // check if we're near a transition point or if output changed significantly
+                        bool nearTransition = (cycleTime < 0.2f || cycleTime > cyclePeriod - 0.2f || 
+                                            std::abs(cycleTime - duration) < 0.2f);
+                        bool significantChange = std::abs(outputTime - lastDebugOutputTime) > 0.5f;
+                        
+                        if ((nearTransition || significantChange) && std::abs(cycleTime - lastDebugCycleTime) > 0.1f) {
+                            std::cout << "[Animation] Ping-pong: input=" << inputTime 
+                                      << ", cycleTime=" << cycleTime 
+                                      << ", output=" << outputTime 
+                                      << ", duration=" << duration << std::endl;
+                            lastDebugCycleTime = cycleTime;
+                            lastDebugOutputTime = outputTime;
+                        }
+                    }
+                } else {
+                    // duration is 0, cannot apply ping-pong
+                    static bool pingPongWarningPrinted = false;
+                    if (!pingPongWarningPrinted && path.find("titan") != std::string::npos) {
+                        std::cout << "[Animation] WARNING: Ping-pong mode requested but duration is 0 for " << path << std::endl;
+                        pingPongWarningPrinted = true;
+                    }
+                }
+            }
+            
             GLBLoader::updateAnimation(model, animTime, animIndex, ignoreRootTrans);
         } else {
             // no animation control, use default behavior (loop first animation)

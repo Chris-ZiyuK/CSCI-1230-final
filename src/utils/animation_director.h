@@ -33,6 +33,7 @@ struct GLBAnimationControl {
     bool enabled = true;
     bool ignoreRootTranslation = false;  // ignore translation on root joint (for path animation)
     float speed = 1.0f;         // animation playback speed (1.0 = normal, 0.5 = half speed, 2.0 = double speed)
+    bool pingPong = false;     // ping-pong mode: play forward then backward (smooth looping)
 };
 
 // animation director: manages all animations (path and skeletal)
@@ -59,7 +60,8 @@ public:
                        int animIndex = 0,
                        bool loop = true,
                        bool ignoreRootTranslation = false,  // ignore root joint translation
-                       float speed = 1.0f);  // animation playback speed
+                       float speed = 1.0f,  // animation playback speed
+                       bool pingPong = false);  // ping-pong mode for smooth looping
     
     // preset scene animations
     // setup default titan and fish animations
@@ -71,6 +73,7 @@ public:
     void play();
     void pause();
     void reset();
+    bool isPlaying() const;
     float getCurrentTime() const;
     
     // query interface
@@ -83,6 +86,7 @@ public:
     int getGLBAnimationIndex(const std::string& meshfile) const;
     bool isGLBAnimationActive(const std::string& meshfile) const;
     bool shouldIgnoreRootTranslation(const std::string& meshfile) const;
+    bool isGLBAnimationPingPong(const std::string& meshfile) const;
     
     // debug interface
     void printAnimationInfo() const;
@@ -97,6 +101,32 @@ public:
     float getMaxPathDuration() const;
     void setAutoStopTime(float timeSec);
     bool isShapeVisible(size_t shapeIndex) const;
+    
+    // camera animation (cinematic camera movement)
+    // set camera to follow a target object with dynamic offset
+    void setCameraFollowTarget(size_t targetShapeIndex, 
+                               const glm::vec3& offset = glm::vec3(0.f, 0.f, 5.f),
+                               bool followPosition = true,
+                               bool lookAtTarget = true);
+    // set camera to follow target with animated offset (for dramatic pull-back effect)
+    void setCameraFollowWithAnimatedOffset(size_t targetShapeIndex,
+                                           const glm::vec3& startOffset,
+                                           const glm::vec3& endOffset,
+                                           float transitionStartTime,
+                                           float transitionDuration);
+    // set camera to orbit around target (1/4 circle movement + follow translation)
+    void setCameraOrbitTarget(size_t targetShapeIndex,
+                             float radius,
+                             float startAngle,  // start angle in degrees (0 = front, 90 = side)
+                             float endAngle,    // end angle in degrees
+                             float orbitDuration,
+                             const glm::vec3& verticalOffset = glm::vec3(0.f, 0.f, 0.f));
+    // set camera path animation
+    void setCameraPath(const std::vector<PathKeyframe>& keyframes, bool loop = false);
+    // get camera transform (position and look direction)
+    // returns: pair of (position, lookDirection)
+    std::pair<glm::vec3, glm::vec3> getCameraTransform() const;
+    bool isCameraAnimated() const;
     
 private:
     // internal implementation
@@ -124,4 +154,38 @@ private:
     bool m_playing = true;
     float m_autoStopTime = -1.f;  // >=0 means stop when time reaches this
     const RenderData* m_renderData = nullptr;
+    
+    // camera animation
+    bool m_cameraFollowTarget = false;
+    size_t m_cameraTargetIndex = SIZE_MAX;
+    glm::vec3 m_cameraOffset = glm::vec3(0.f, 0.f, 5.f);
+    bool m_cameraFollowPosition = true;
+    bool m_cameraLookAtTarget = true;
+    PathAnimation m_cameraPath;
+    bool m_cameraPathEnabled = false;
+    
+    // animated offset for dramatic camera movement
+    bool m_cameraAnimatedOffset = false;
+    glm::vec3 m_cameraStartOffset = glm::vec3(0.f, 0.f, 5.f);
+    glm::vec3 m_cameraEndOffset = glm::vec3(0.f, 0.f, 5.f);
+    float m_cameraOffsetStartTime = 0.f;
+    float m_cameraOffsetDuration = 0.f;
+    
+    // camera cut to wide shot
+    bool m_cameraWideShot = false;
+    glm::vec3 m_cameraWideShotPos = glm::vec3(0.f, 0.f, 5.f);
+    glm::vec3 m_cameraWideShotLook = glm::vec3(0.f, 0.f, -1.f);
+    float m_cameraWideShotStartTime = 0.f;
+    
+    // camera orbit mode
+    bool m_cameraOrbitMode = false;
+    float m_cameraOrbitRadius = 5.f;
+    float m_cameraOrbitStartAngle = 0.f;
+    float m_cameraOrbitEndAngle = 90.f;
+    float m_cameraOrbitDuration = 10.f;
+    glm::vec3 m_cameraOrbitVerticalOffset = glm::vec3(0.f, 0.f, 0.f);
+    
+    // cached last position when target is hidden (mutable for caching in const method)
+    mutable glm::vec3 m_cameraLastTargetPos = glm::vec3(0.f, 0.f, 0.f);
+    mutable bool m_cameraUseLastPos = false;
 };
