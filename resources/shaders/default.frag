@@ -120,12 +120,13 @@ vec2 zoomUV(vec2 uv, float zoom, vec2 offset) {
 void main()
 {
     if (useBackgroundTex) {
-        const float bgZoom = 2.2;    // show more of the texture
-        const vec2 bgOffset = vec2(0.1, -0.1);
+        const float bgZoom = 1.3;    // gentler zoom to reduce distortion
+        const vec2 bgOffset = vec2(0.02, -0.03);
         vec3 dir = normalize(worldPos);
         vec2 uv = dirToEquirectUV(dir);
         uv.x = fract(uv.x + bgScrollOffset);
         uv = zoomUV(uv, bgZoom, bgOffset);
+        uv.y = clamp(uv.y, 0.10, 0.90); // avoid pole regions that stretch the texture
         vec3 texColor = texture(backgroundTex, uv).rgb;
         fragColor = vec4(texColor, 0.0); // alpha=0 so bloom ignores background
         return;

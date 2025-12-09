@@ -1,6 +1,8 @@
 #include "DefaultScene.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <algorithm>
+#include <cmath>
 #include <random>
 
 namespace {
@@ -17,9 +19,12 @@ void addStarField(RenderData &renderData, int count,
                   float emissiveMin, float emissiveMax) {
     std::mt19937 rng(20250144+ static_cast<int>((scaleMin + scaleMax) * 1000));
 
-    std::uniform_real_distribution<float> posX(-7.5f, 7.5f);
-    std::uniform_real_distribution<float> posY(-4.5f, 4.5f);
-    std::uniform_real_distribution<float> posZ(-12.f, -2.5f);
+    // Sample stars uniformly on a spherical shell around the camera
+    const glm::vec3 starCenter(0.f, 0.f, 5.f);
+    const float twoPi = 6.28318530718f;
+    std::uniform_real_distribution<float> radiusDist(12.f, 44.f); // keep inside sky sphere (r=50) and away from camera
+    std::uniform_real_distribution<float> zDist(-1.f, 1.f);
+    std::uniform_real_distribution<float> thetaDist(0.f, twoPi);
     std::uniform_real_distribution<float> scaleDist(scaleMin, scaleMax);
     std::uniform_real_distribution<float> emissiveDist(emissiveMin, emissiveMax);
     std::uniform_real_distribution<float> tilt(-0.5f, 0.5f);
@@ -28,8 +33,17 @@ void addStarField(RenderData &renderData, int count,
         RenderShapeData star;
         star.primitive.type = PrimitiveType::PRIMITIVE_STAR;
 
+        // direction uniformly sampled on sphere
+        float z = zDist(rng);
+        float theta = thetaDist(rng);
+        float xy = std::sqrt(std::max(0.f, 1.f - z * z));
+        glm::vec3 dir(xy * std::cos(theta), xy * std::sin(theta), z);
+
+        float radius = radiusDist(rng);
+        glm::vec3 pos = starCenter + dir * radius;
         float scale = scaleDist(rng);
-        glm::mat4 transform = glm::translate(glm::vec3(posX(rng), posY(rng), posZ(rng)));
+
+        glm::mat4 transform = glm::translate(pos);
         transform = transform * glm::rotate(tilt(rng), glm::vec3(0.f, 1.f, 0.f));
         transform = transform * glm::rotate(tilt(rng), glm::vec3(0.f, 0.f, 1.f));
         transform = transform * glm::scale(glm::vec3(scale));
@@ -68,7 +82,7 @@ void createDefaultScene(RenderData &renderData) {
     // ===== Sky Sphere =====
     RenderShapeData sky;
     sky.primitive.type = PrimitiveType::PRIMITIVE_SPHERE;
-    sky.ctm = glm::scale(glm::vec3(50.f)); // 大球包围整个场景
+    sky.ctm = glm::scale(glm::vec3(50.f));
 
     sky.primitive.material.cDiffuse = glm::vec4(0, 0, 0, 1);
     sky.primitive.material.cAmbient = glm::vec4(0, 0, 0, 1);
@@ -91,6 +105,6 @@ void createDefaultScene(RenderData &renderData) {
     // renderData.shapes.push_back(planet);
 
     // ===== Procedural star field =====
-    addStarField(renderData, 40, 0.035f, 0.13f, 1.2f, 3.5f);
-    addStarField(renderData, 600, 0.025f, 0.038f, 0.8f, 1.8f);
+    addStarField(renderData, 1000, 0.035f, 0.13f, 1.2f, 3.5f);
+    addStarField(renderData, 6000, 0.025f, 0.038f, 0.8f, 1.8f);
 }

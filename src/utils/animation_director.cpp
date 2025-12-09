@@ -27,6 +27,8 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_cameraWideShot = false;
     m_cameraOrbitMode = false;
     m_cameraUseLastPos = false;
+    m_cameraSwitchActive = false;
+    m_cameraSwitchStartTime = -1.f;
     
     // build meshfile to shape index mapping
     for (size_t i = 0; i < renderData.shapes.size(); ++i) {
@@ -149,6 +151,7 @@ void AnimationDirector::setupTitanFishAnimation() {
             {0.0f, glm::vec3(-18.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
             {10.0f, glm::vec3(16.0f, -1.0f, -2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
         };
+        // loop disabled: titan path ends after duration
         addPathAnimation(titanIndex, titanKeyframes, false);
         
         // titan glb animation: play continuously (only rotation/scale, no translation)
@@ -217,8 +220,20 @@ void AnimationDirector::update(float deltaSec) {
 
         const float collisionDistance = 1.0f;
         if (glm::length(titanPos - fishPos) <= collisionDistance) {
+            // remember last fish position for smooth camera handoff
+            m_cameraLastTargetPos = fishPos;
             hideShape(m_fishIndex);
             std::cout << "[Animation] Titan touched fish -> fish hidden" << std::endl;
+            // start smooth camera handoff toward titan
+            m_cameraSwitchActive = true;
+            m_cameraSwitchStartTime = m_currentTime;
+        }
+    }
+
+    // finish camera handoff after blend duration
+    if (m_cameraSwitchActive && m_cameraSwitchDuration > 0.f && m_cameraSwitchStartTime >= 0.f) {
+        if ((m_currentTime - m_cameraSwitchStartTime) >= m_cameraSwitchDuration) {
+            m_cameraSwitchActive = false;
         }
     }
 }
@@ -239,6 +254,8 @@ void AnimationDirector::reset() {
     m_currentTime = 0.f;
     m_playing = true;
     resetVisibility();
+    m_cameraSwitchActive = false;
+    m_cameraSwitchStartTime = -1.f;
 }
 
 bool AnimationDirector::isPlaying() const {
@@ -735,7 +752,14 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
                 actualTargetIndex = m_titanIndex;
                 switchedToTitan = true;
                 glm::mat4 titanTransform = evaluatePathAnimation(m_titanIndex, m_currentTime);
-                targetPos = extractPosition(titanTransform);
+                glm::vec3 titanPos = extractPosition(titanTransform);
+
+                float progress = 1.f;
+                if (m_cameraSwitchActive && m_cameraSwitchDuration > 0.f && m_cameraSwitchStartTime >= 0.f) {
+                    progress = std::clamp((m_currentTime - m_cameraSwitchStartTime) / m_cameraSwitchDuration, 0.f, 1.f);
+                }
+                // blend target position from last fish position to titan to avoid instant jump
+                targetPos = glm::mix(m_cameraLastTargetPos, titanPos, progress);
             } else {
                 // no alternative target, use last known position to avoid sudden jump
                 if (m_cameraUseLastPos) {
@@ -768,8 +792,16 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
             float currentAngle;
             
             if (switchedToTitan) {
-                // switched to titan, use side view (90°)
-                currentAngle = 90.f;
+                // switched to titan: smoothly blend from current orbit angle to side view (90°)
+                float currentFishAngle = glm::mix(m_cameraOrbitStartAngle, m_cameraOrbitEndAngle,
+                                                  m_cameraOrbitDuration > 0.f
+                                                      ? std::clamp(m_currentTime / m_cameraOrbitDuration, 0.f, 1.f)
+                                                      : 1.f);
+                float progress = 1.f;
+                if (m_cameraSwitchActive && m_cameraSwitchDuration > 0.f && m_cameraSwitchStartTime >= 0.f) {
+                    progress = std::clamp((m_currentTime - m_cameraSwitchStartTime) / m_cameraSwitchDuration, 0.f, 1.f);
+                }
+                currentAngle = glm::mix(currentFishAngle, 90.f, progress);
             } else {
                 // normal orbit for fish
                 float t = 0.f;
@@ -797,7 +829,13 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
                 // camera at titan's right side: offset in +Z direction
                 // use larger radius for titan to get better side view
                 float titanSideRadius = m_cameraOrbitRadius * 1.5f;  // 50% further for better view
-                offset = glm::vec3(0.f, m_cameraOrbitVerticalOffset.y, titanSideRadius);
+                float startRadius = glm::length(glm::vec3(x, 0.f, z));
+                float progress = 1.f;
+                if (m_cameraSwitchActive && m_cameraSwitchDuration > 0.f && m_cameraSwitchStartTime >= 0.f) {
+                    progress = std::clamp((m_currentTime - m_cameraSwitchStartTime) / m_cameraSwitchDuration, 0.f, 1.f);
+                }
+                float blendedRadius = glm::mix(startRadius, titanSideRadius, progress);
+                offset = glm::vec3(0.f, m_cameraOrbitVerticalOffset.y, blendedRadius);
             } else {
                 offset = glm::vec3(x, m_cameraOrbitVerticalOffset.y, z) + m_cameraOrbitVerticalOffset;
             }

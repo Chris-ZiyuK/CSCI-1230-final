@@ -184,6 +184,10 @@ private:
     float m_cameraOrbitEndAngle = 90.f;
     float m_cameraOrbitDuration = 10.f;
     glm::vec3 m_cameraOrbitVerticalOffset = glm::vec3(0.f, 0.f, 0.f);
+    // smooth handoff when fish is eaten -> blend camera toward titan side view
+    bool m_cameraSwitchActive = false;
+    float m_cameraSwitchStartTime = -1.f;
+    float m_cameraSwitchDuration = 3.0f; // seconds to blend to titan-centered shot
     
     // cached last position when target is hidden (mutable for caching in const method)
     mutable glm::vec3 m_cameraLastTargetPos = glm::vec3(0.f, 0.f, 0.f);
