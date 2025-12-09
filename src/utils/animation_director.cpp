@@ -157,6 +157,10 @@ void AnimationDirector::setupTitanFishAnimation() {
 void AnimationDirector::update(float deltaSec) {
     if (m_playing) {
         m_currentTime += deltaSec;
+        if (m_autoStopTime >= 0.f && m_currentTime >= m_autoStopTime) {
+            m_currentTime = m_autoStopTime;
+            m_playing = false;
+        }
     }
 }
 
@@ -174,6 +178,7 @@ void AnimationDirector::pause() {
 
 void AnimationDirector::reset() {
     m_currentTime = 0.f;
+    m_playing = true;
 }
 
 float AnimationDirector::getCurrentTime() const {
@@ -416,4 +421,21 @@ float AnimationDirector::getModelScale(const std::string& meshfile) const {
 
 void AnimationDirector::setModelScale(const std::string& meshfile, float scale) {
     m_modelScales[meshfile] = scale;
+}
+
+float AnimationDirector::getMaxPathDuration() const {
+    float maxDur = 0.f;
+    for (const auto& [index, anim] : m_pathAnimations) {
+        if (anim.duration > maxDur) {
+            maxDur = anim.duration;
+        }
+    }
+    return maxDur;
+}
+
+void AnimationDirector::setAutoStopTime(float timeSec) {
+    m_autoStopTime = timeSec;
+    if (m_autoStopTime < 0.f) {
+        m_playing = true;
+    }
 }

@@ -616,7 +616,10 @@ void Realtime::sceneChanged() {
     } else {
         m_animationDirector.reset();
     }
-    // ANIMATION: reset timer when scene is loaded (start from beginning)
+    // ANIMATION: play once on load, then pause at end of path
+    m_animationDirector.reset();
+    m_animationDirector.setAutoStopTime(m_animationDirector.getMaxPathDuration());
+    m_animationDirector.play();
     m_glbAnimTime = 0.f;
 
     // Update camera parameters
@@ -1239,6 +1242,8 @@ void Realtime::deleteGlbResources() {
 // ANIMATION: reset animation timer
 void Realtime::resetAnimation() {
     m_animationDirector.reset();
+    m_animationDirector.setAutoStopTime(m_animationDirector.getMaxPathDuration());
+    m_animationDirector.play();
     m_glbAnimTime = 0.f;
     std::cout << "[Animation] Animation reset" << std::endl;
 }
