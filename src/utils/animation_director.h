@@ -204,4 +204,10 @@ private:
     // cached last position when target is hidden (mutable for caching in const method)
     mutable glm::vec3 m_cameraLastTargetPos = glm::vec3(0.f, 0.f, 0.f);
     mutable bool m_cameraUseLastPos = false;
+
+    // fish eaten flag
+    bool m_fishEaten = false;
+
+public:
+    bool isFishEaten() const { return m_fishEaten; }
 };

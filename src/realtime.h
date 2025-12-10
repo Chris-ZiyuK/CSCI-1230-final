@@ -91,7 +91,7 @@ private:
     // === NEW: For Bloom / offscreen rendering ===
     GLuint m_sceneFBO = 0;
     GLuint m_sceneColorTex = 0;
-    GLuint m_sceneDepthRBO = 0;
+    GLuint m_sceneDepthTex = 0;
 
     GLuint m_brightFBO = 0;
     GLuint m_brightTex = 0;
@@ -118,6 +118,8 @@ private:
     int m_fishShapeIndex = -1;
     glm::vec2 m_prevFishUV = glm::vec2(0.f);
     bool m_prevFishUVValid = false;
+    glm::mat4 m_prevViewProj = glm::mat4(1.0f);
+    glm::mat4 m_currViewProj = glm::mat4(1.0f);
 
     // For monster
     std::unordered_map<std::string, GLBModel> m_glbModels;

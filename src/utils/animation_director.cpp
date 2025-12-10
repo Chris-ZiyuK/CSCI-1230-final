@@ -27,6 +27,7 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_cameraWideShot = false;
     m_cameraOrbitMode = false;
     m_cameraUseLastPos = false;
+    m_fishEaten = false;
     m_cameraSwitchActive = false;
     m_cameraSwitchStartTime = -1.f;
     m_cameraPullbackActive = false;
@@ -233,6 +234,7 @@ void AnimationDirector::update(float deltaSec) {
             m_cameraLastTargetPos = fishPos;
             hideShape(m_fishIndex);
             std::cout << "[Animation] Titan touched fish -> fish hidden" << std::endl;
+            m_fishEaten = true;
             // start smooth camera handoff toward titan
             m_cameraSwitchActive = true;
             m_cameraSwitchStartTime = m_currentTime;
@@ -282,6 +284,7 @@ void AnimationDirector::reset() {
     m_cameraPullbackFinished = false;
     m_cameraPullbackStartTime = -1.f;
     m_cameraHoldAfterPullback = false;
+    m_fishEaten = false;
 }
 
 bool AnimationDirector::isPlaying() const {

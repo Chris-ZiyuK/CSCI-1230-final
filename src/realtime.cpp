@@ -145,12 +145,17 @@ void Realtime::initializeGL() {
     GLenum attachments[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, attachments);
 
-    // 3) Depth buffer
-    glGenRenderbuffers(1, &m_sceneDepthRBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                              GL_RENDERBUFFER, m_sceneDepthRBO);
+    // 3) Depth texture (sample-able for motion blur)
+    glGenTextures(1, &m_sceneDepthTex);
+    glBindTexture(GL_TEXTURE_2D, m_sceneDepthTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, w, h, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                           GL_TEXTURE_2D, m_sceneDepthTex, 0);
 
     // Check
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -317,6 +322,7 @@ void Realtime::paintGL() {
         view = m_camera.getViewMatrix();
     }
     glm::mat4 proj = m_camera.getProjMatrix();
+    m_currViewProj = proj * view;
 
     if (GLint uView = glGetUniformLocation(m_shader, "view"); uView != -1) {
         glUniformMatrix4fv(uView, 1, GL_FALSE, &view[0][0]);
@@ -535,7 +541,7 @@ void Realtime::paintGL() {
 
     glUseProgram(m_screenShader);
 
-    // motion vector for screen-space blur (approx from camera + bg scroll)
+    // motion vector for screen-space blur (G-buffer depth + camera/fish motion)
     glm::vec3 currentCamPos = glm::vec3(m_renderData.cameraData.pos);
     if (m_animationDirector.isCameraAnimated()) {
         currentCamPos = glm::vec3(view[3]); // extract translation from view^-1? view is not inverted
@@ -550,31 +556,31 @@ void Realtime::paintGL() {
     float camLen = glm::length(camDelta);
     if (!m_firstFrame && camLen > 1e-5f) {
         // only blur when camera moves; background scroll alone won't blur
-        motionVec = camDelta * 0.3f + glm::vec2(bgDelta * 6.0f, 0.0f);
+        motionVec = camDelta * 0.02f + glm::vec2(bgDelta * 1.8f, 0.0f);
     }
 
-    // fish screen-space velocity, additive but softer
-    if (m_fishShapeIndex >= 0) {
-        glm::mat4 fishMat = m_animationDirector.getTransform(static_cast<size_t>(m_fishShapeIndex));
-        glm::vec3 fishPos = glm::vec3(fishMat[3]);
-        glm::vec4 clip = proj * view * glm::vec4(fishPos, 1.0f);
-        if (clip.w != 0.f) {
-            glm::vec2 uv = glm::vec2(clip.x, clip.y) / clip.w * 0.5f + glm::vec2(0.5f);
-            if (m_prevFishUVValid) {
-                glm::vec2 fishDelta = uv - m_prevFishUV;
-                float fishLen = glm::length(fishDelta);
-                if (fishLen > 1e-5f) {
-                    motionVec += fishDelta * 0.28f;
-                }
-            }
-            m_prevFishUV = uv;
-            m_prevFishUVValid = true;
-        }
-    }
+    // fish screen-space velocity contribution removed (only camera-based)
+    m_prevFishUVValid = false;
 
-    float motionLen = glm::length(motionVec);
+    // per-pixel velocity via depth (current vs prev view-projection)
+    // sample depth
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_sceneDepthTex);
+
+    float motionLen = glm::length(motionVec) * 0.5f; // overall soften
+    if (motionLen < 0.002f) {
+        motionVec = glm::vec2(0.f);
+        motionLen = 0.f;
+    }
     glm::vec2 motionDir = motionLen > 1e-5f ? motionVec / motionLen : glm::vec2(0.f);
-    float motionAmount = glm::clamp(motionLen, 0.f, 0.08f); // softer cap
+    float motionAmount = glm::clamp(motionLen, 0.f, 0.03f); // softer cap
+
+    // gate: only enable blur after fish eaten
+    bool blurEnabled = m_animationDirector.isFishEaten();
+    if (!blurEnabled) {
+        motionDir = glm::vec2(0.f);
+        motionAmount = 0.f;
+    }
 
     // sceneTex
     glActiveTexture(GL_TEXTURE0);
@@ -598,6 +604,19 @@ void Realtime::paintGL() {
     if (GLint loc = glGetUniformLocation(m_screenShader, "motionAmount"); loc != -1) {
         glUniform1f(loc, motionAmount);
     }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "depthTex"); loc != -1) {
+        glUniform1i(loc, 2);
+    }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "currViewProjInv"); loc != -1) {
+        glm::mat4 inv = glm::inverse(m_currViewProj);
+        glUniformMatrix4fv(loc, 1, GL_FALSE, &inv[0][0]);
+    }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "prevViewProj"); loc != -1) {
+        glUniformMatrix4fv(loc, 1, GL_FALSE, &m_prevViewProj[0][0]);
+    }
+    if (GLint loc = glGetUniformLocation(m_screenShader, "blurEnabled"); loc != -1) {
+        glUniform1i(loc, blurEnabled ? 1 : 0);
+    }
 
     glBindVertexArray(m_quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -607,6 +626,7 @@ void Realtime::paintGL() {
     m_prevCamPos = currentCamPos;
     m_prevBgScrollOffset = m_bgScrollOffset;
     m_firstFrame = false;
+    m_prevViewProj = m_currViewProj;
 }
 
 void Realtime::resizeGL(int w, int h) {
@@ -634,9 +654,10 @@ void Realtime::resizeGL(int w, int h) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, W, H, 0,
                  GL_RGBA, GL_FLOAT, NULL);
 
-    // depth buffer
-    glBindRenderbuffer(GL_RENDERBUFFER, m_sceneDepthRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, W, H);
+    // depth texture
+    glBindTexture(GL_TEXTURE_2D, m_sceneDepthTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, W, H, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 }
 
 void Realtime::sceneChanged() {
