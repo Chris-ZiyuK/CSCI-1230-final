@@ -6,6 +6,7 @@
 #include <QImage>
 #include <iostream>
 #include <algorithm>
+#include <filesystem>
 #include "settings.h"
 #include "utils/shaderloader.h"
 #include "camera.h"
@@ -688,7 +689,30 @@ void Realtime::sceneChanged() {
     // ANIMATION: initialize animation director
     m_animationDirector.initialize(m_renderData);
     if (!m_sceneFilePath.empty()) {
-        m_animationDirector.setupTitanFishAnimation();
+        // extract filename from path to determine animation type
+        std::filesystem::path path(m_sceneFilePath);
+        std::string filename = path.filename().string();
+        std::string filenameLower = filename;
+        std::transform(filenameLower.begin(), filenameLower.end(), filenameLower.begin(), ::tolower);
+        
+        // remove .json extension if present
+        if (filenameLower.length() >= 5 && 
+            filenameLower.substr(filenameLower.length() - 5) == ".json") {
+            filenameLower = filenameLower.substr(0, filenameLower.length() - 5);
+        }
+        
+        // choose animation setup based on filename
+        if (filenameLower.find("combined") != std::string::npos) {
+            // combined scene: use titan-fish animation with camera movement
+            m_animationDirector.setupTitanFishAnimation();
+        } else if (filenameLower.find("alien_fish") != std::string::npos || 
+                   filenameLower.find("desert_titan") != std::string::npos) {
+            // single object scenes: static animation (no movement)
+            m_animationDirector.setupStaticAnimation();
+        } else {
+            // default: use titan-fish animation
+            m_animationDirector.setupTitanFishAnimation();
+        }
     } else {
         m_animationDirector.reset();
     }

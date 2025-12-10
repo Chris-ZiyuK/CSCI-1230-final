@@ -28,6 +28,8 @@ void AnimationDirector::initialize(const RenderData& renderData) {
     m_cameraOrbitMode = false;
     m_cameraUseLastPos = false;
     m_cameraSwitchActive = false;
+    m_cameraShowcaseMode = false;
+    m_cameraStages.clear();
     m_cameraSwitchStartTime = -1.f;
     m_cameraPullbackActive = false;
     m_cameraPullbackFinished = false;
@@ -207,6 +209,220 @@ void AnimationDirector::setupTitanFishAnimation() {
                            glm::vec3(0.f, 1.f, 0.f));  // vertical offset: slightly above
         
         std::cout << "[Animation] Camera setup: orbit from front to side while following fish" << std::endl;
+    }
+}
+
+void AnimationDirector::setupStaticAnimation() {
+    std::cout << "[Animation] setupStaticAnimation() called" << std::endl;
+    if (!m_renderData) {
+        std::cout << "[Animation] ERROR: m_renderData is null!" << std::endl;
+        return;
+    }
+    
+    std::cout << "[Animation] Total shapes: " << m_renderData->shapes.size() << std::endl;
+    
+    // find titan and fish shape indices
+    size_t titanIndex = SIZE_MAX;
+    size_t fishIndex = SIZE_MAX;
+    std::string titanMeshfile;
+    std::string fishMeshfile;
+    
+    for (size_t i = 0; i < m_renderData->shapes.size(); ++i) {
+        const auto& shape = m_renderData->shapes[i];
+        if (shape.primitive.type == PrimitiveType::PRIMITIVE_MESH) {
+            std::string meshfile = shape.primitive.meshfile;
+            std::cout << "[Animation] Shape " << i << ": meshfile = " << meshfile << std::endl;
+            
+            // check for titan (case insensitive)
+            std::string meshfileLower = meshfile;
+            std::transform(meshfileLower.begin(), meshfileLower.end(), meshfileLower.begin(), ::tolower);
+            if (meshfileLower.find("titan") != std::string::npos) {
+                titanIndex = i;
+                titanMeshfile = meshfile;
+                std::cout << "[Animation] Found titan at index " << i << ", meshfile: " << meshfile << std::endl;
+            } else if (meshfile.find("alien_fish") != std::string::npos) {
+                fishIndex = i;
+                fishMeshfile = meshfile;
+                std::cout << "[Animation] Found fish at index " << i << ", meshfile: " << meshfile << std::endl;
+            }
+        }
+    }
+    
+    // setup model scales
+    if (titanIndex != SIZE_MAX) {
+        // titan: scale down more for better visibility when alone
+        setModelScale("titan", 0.01f);
+        std::cout << "[Animation] Titan scale set to 0.01f" << std::endl;
+    }
+    if (fishIndex != SIZE_MAX) {
+        // fish: scale down
+        setModelScale("alien_fish", 0.5f);
+        std::cout << "[Animation] Fish scale set to 0.2f" << std::endl;
+    }
+    
+    // setup titan position and GLB animation with ping-pong for smooth looping
+    if (titanIndex != SIZE_MAX) {
+        m_titanIndex = titanIndex;
+        m_titanMeshfile = titanMeshfile;
+        
+        // get original position from CTM and adjust downward
+        glm::mat4 originalCTM = m_renderData->shapes[titanIndex].ctm;
+        glm::vec3 originalPos = extractPosition(originalCTM);
+        // move titan down by 2 units
+        glm::vec3 adjustedPos = originalPos + glm::vec3(1.0f, -0.5f, 0.0f);
+        
+        // add a static path animation (single keyframe) to position titan lower
+        std::vector<PathKeyframe> titanKeyframes = {
+            {0.0f, adjustedPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f)},
+        };
+        addPathAnimation(titanIndex, titanKeyframes, false);
+        std::cout << "[Animation] Titan position adjusted: original y=" << originalPos.y 
+                  << ", adjusted y=" << adjustedPos.y << std::endl;
+        
+        // titan glb animation: play continuously with ping-pong mode
+        // duration=0 means loop the full animation duration
+        // speed=0.6 means play at 60% speed (slower)
+        // pingPong=true means play forward then backward for smooth looping
+        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.5f, true);
+        std::cout << "[Animation] Titan GLB animation: speed=0.6x, ping-pong mode enabled for smooth looping" << std::endl;
+    }
+    
+    // setup fish GLB animation (if present)
+    if (fishIndex != SIZE_MAX) {
+        m_fishIndex = fishIndex;
+        m_fishMeshfile = fishMeshfile;
+        // fish glb animation: swimming animation (only rotation/scale, no translation)
+        setGLBAnimation(fishMeshfile, 0.0f, 0.0f, 0, true, true);
+        std::cout << "[Animation] Fish GLB animation enabled" << std::endl;
+    }
+    
+    // ensure everything is visible at start
+    resetVisibility();
+    
+    // setup multi-stage camera showcase animation (total ~60 seconds)
+    if (titanIndex != SIZE_MAX) {
+        m_cameraTargetIndex = titanIndex;
+        m_cameraFollowTarget = true;
+        m_cameraFollowPosition = true;
+        m_cameraLookAtTarget = true;
+        m_cameraShowcaseMode = true;
+        m_cameraOrbitMode = false;  // use showcase mode instead
+        // reset camera hold flags to ensure camera can move
+        m_cameraHoldAfterPullback = false;
+        m_cameraPullbackFinished = false;
+        m_cameraPullbackActive = false;
+        
+        // stage A (0-15s): horizontal 360° rotation
+        CameraStage stageA;
+        stageA.startTime = 0.f;
+        stageA.duration = 15.f;
+        stageA.startRadius = 8.f;
+        stageA.endRadius = 8.f;
+        stageA.startHorizontalAngle = 0.f;
+        stageA.endHorizontalAngle = 360.f;
+        stageA.startVerticalAngle = 0.f;
+        stageA.endVerticalAngle = 0.f;
+        
+        // stage B (15-30s): vertical tilt orbit (from below to above)
+        CameraStage stageB;
+        stageB.startTime = 15.f;
+        stageB.duration = 15.f;
+        stageB.startRadius = 8.f;
+        stageB.endRadius = 8.f;
+        stageB.startHorizontalAngle = 45.f;  // start from 45° (diagonal view)
+        stageB.endHorizontalAngle = 135.f;   // rotate to 135° while tilting
+        stageB.startVerticalAngle = -30.f;   // start from below
+        stageB.endVerticalAngle = 30.f;      // end above
+        
+        // stage C (30-45s): push in + rotate (zoom in while rotating)
+        CameraStage stageC;
+        stageC.startTime = 30.f;
+        stageC.duration = 15.f;
+        stageC.startRadius = 8.f;
+        stageC.endRadius = 4.f;  // zoom in
+        stageC.startHorizontalAngle = 135.f;  // continue from stage B
+        stageC.endHorizontalAngle = 225.f;     // rotate 90 degrees more
+        stageC.startVerticalAngle = 30.f;      // start from above (continue from stage B)
+        stageC.endVerticalAngle = -15.f;       // tilt down while zooming in
+        
+        // stage D (45-60s): pull back + top view (zoom out with top angle)
+        CameraStage stageD;
+        stageD.startTime = 45.f;
+        stageD.duration = 15.f;
+        stageD.startRadius = 4.f;
+        stageD.endRadius = 10.f;  // zoom out
+        stageD.startHorizontalAngle = 225.f;  // continue from stage C
+        stageD.endHorizontalAngle = 315.f;    // continue rotating (almost full circle)
+        stageD.startVerticalAngle = -15.f;     // continue from stage C
+        stageD.endVerticalAngle = -45.f;       // tilt down to top view
+        
+        m_cameraStages = {stageA, stageB, stageC, stageD};
+        m_cameraOrbitVerticalOffset = glm::vec3(0.f, 2.f, 0.f);
+        
+        std::cout << "[Animation] Camera setup: multi-stage showcase for titan (60s total)" << std::endl;
+    } else if (fishIndex != SIZE_MAX) {
+        m_cameraTargetIndex = fishIndex;
+        m_cameraFollowTarget = true;
+        m_cameraFollowPosition = true;
+        m_cameraLookAtTarget = true;
+        m_cameraShowcaseMode = true;
+        m_cameraOrbitMode = false;  // use showcase mode instead
+        // reset camera hold flags to ensure camera can move
+        m_cameraHoldAfterPullback = false;
+        m_cameraPullbackFinished = false;
+        m_cameraPullbackActive = false;
+        
+        // stage A (0-15s): horizontal 360° rotation
+        CameraStage stageA;
+        stageA.startTime = 0.f;
+        stageA.duration = 15.f;
+        stageA.startRadius = 6.f;
+        stageA.endRadius = 6.f;
+        stageA.startHorizontalAngle = 0.f;
+        stageA.endHorizontalAngle = 360.f;
+        stageA.startVerticalAngle = 0.f;
+        stageA.endVerticalAngle = 0.f;
+        
+        // stage B (15-30s): vertical tilt orbit
+        CameraStage stageB;
+        stageB.startTime = 15.f;
+        stageB.duration = 15.f;
+        stageB.startRadius = 6.f;
+        stageB.endRadius = 6.f;
+        stageB.startHorizontalAngle = 45.f;  // start from diagonal
+        stageB.endHorizontalAngle = 135.f;   // rotate while tilting
+        stageB.startVerticalAngle = -20.f;   // start from below
+        stageB.endVerticalAngle = 20.f;      // end above
+        
+        // stage C (30-45s): push in + rotate
+        CameraStage stageC;
+        stageC.startTime = 30.f;
+        stageC.duration = 15.f;
+        stageC.startRadius = 6.f;
+        stageC.endRadius = 3.f;  // zoom in more for smaller fish
+        stageC.startHorizontalAngle = 135.f;  // continue from stage B
+        stageC.endHorizontalAngle = 225.f;    // rotate 90 degrees more
+        stageC.startVerticalAngle = 20.f;     // start from above (continue from stage B)
+        stageC.endVerticalAngle = -10.f;      // tilt down while zooming in
+        
+        // stage D (45-60s): pull back + top view
+        CameraStage stageD;
+        stageD.startTime = 45.f;
+        stageD.duration = 15.f;
+        stageD.startRadius = 3.f;
+        stageD.endRadius = 8.f;
+        stageD.startHorizontalAngle = 225.f;  // continue from stage C
+        stageD.endHorizontalAngle = 315.f;    // continue rotating (almost full circle)
+        stageD.startVerticalAngle = -10.f;    // continue from stage C
+        stageD.endVerticalAngle = -45.f;      // tilt down to top view
+        
+        m_cameraStages = {stageA, stageB, stageC, stageD};
+        m_cameraOrbitVerticalOffset = glm::vec3(0.f, 1.f, 0.f);
+        
+        std::cout << "[Animation] Camera setup: multi-stage showcase for fish (60s total)" << std::endl;
+    } else {
+        // no titan or fish found, no camera movement
+        std::cout << "[Animation] Static animation setup: no movement, camera stays still" << std::endl;
     }
 }
 
@@ -812,7 +1028,93 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
         
         glm::vec3 offset = m_cameraOffset;
         
-        if (m_cameraOrbitMode) {
+        if (m_cameraShowcaseMode && !m_cameraStages.empty()) {
+            // multi-stage showcase mode: find current stage and interpolate
+            float showcaseTime = std::fmod(m_currentTime, 60.f);  // loop every 60 seconds
+            if (showcaseTime < 0.f) showcaseTime += 60.f;
+            
+            // find current stage
+            const CameraStage* currentStage = nullptr;
+            float stageLocalTime = 0.f;
+            
+            for (size_t i = 0; i < m_cameraStages.size(); ++i) {
+                const auto& stage = m_cameraStages[i];
+                if (showcaseTime >= stage.startTime && showcaseTime < stage.startTime + stage.duration) {
+                    currentStage = &stage;
+                    stageLocalTime = showcaseTime - stage.startTime;
+                    break;
+                }
+            }
+            
+            // if between stages or after last stage, use last stage's end values
+            // this ensures smooth transition when looping back to first stage
+            if (!currentStage && !m_cameraStages.empty()) {
+                const auto& lastStage = m_cameraStages.back();
+                currentStage = &lastStage;
+                stageLocalTime = lastStage.duration;  // use end values
+            }
+            
+            if (currentStage && currentStage->duration > 0.f) {
+                // calculate progress within current stage [0, 1]
+                float stageProgress = std::clamp(stageLocalTime / currentStage->duration, 0.f, 1.f);
+                
+                // interpolate radius
+                float currentRadius = glm::mix(currentStage->startRadius, currentStage->endRadius, stageProgress);
+                
+                // interpolate horizontal angle (yaw)
+                float currentHorizontalAngle = glm::mix(currentStage->startHorizontalAngle, 
+                                                         currentStage->endHorizontalAngle, 
+                                                         stageProgress);
+                
+                // interpolate vertical angle (pitch)
+                float currentVerticalAngle = glm::mix(currentStage->startVerticalAngle, 
+                                                      currentStage->endVerticalAngle, 
+                                                      stageProgress);
+                
+                // convert to radians
+                float horizontalRad = glm::radians(currentHorizontalAngle);
+                float verticalRad = glm::radians(currentVerticalAngle);
+                
+                // calculate camera position using spherical coordinates
+                // horizontal angle: 0° = front (+Z), 90° = right (+X)
+                // vertical angle: 0° = horizontal, +90° = above, -90° = below
+                // use spherical coordinates: x = r*cos(pitch)*sin(yaw), y = r*sin(pitch), z = r*cos(pitch)*cos(yaw)
+                float cosVertical = cos(verticalRad);
+                float sinVertical = sin(verticalRad);
+                float cosHorizontal = cos(horizontalRad);
+                float sinHorizontal = sin(horizontalRad);
+                
+                float x = currentRadius * cosVertical * sinHorizontal;
+                float z = currentRadius * cosVertical * cosHorizontal;
+                float y = currentRadius * sinVertical;
+                
+                // apply vertical offset (small adjustment on top of vertical angle)
+                offset = glm::vec3(x, y + m_cameraOrbitVerticalOffset.y, z);
+                
+                // debug: print stage info occasionally (only for first few seconds of each stage)
+                static int lastStageIndex = -1;
+                static float lastDebugTime = -1.f;
+                int currentStageIndex = currentStage - &m_cameraStages[0];
+                if (currentStageIndex != lastStageIndex || (showcaseTime - lastDebugTime > 3.f)) {
+                    // calculate what the final camera position and look direction will be
+                    glm::vec3 targetPos = extractPosition(evaluatePathAnimation(m_cameraTargetIndex, m_currentTime));
+                    glm::vec3 cameraPos = targetPos + offset;
+                    glm::vec3 lookDir = glm::normalize(targetPos - cameraPos);
+                    
+                    std::cout << "[Camera Showcase] Time=" << showcaseTime 
+                              << "s, Stage=" << currentStageIndex
+                              << ", Progress=" << stageProgress
+                              << ", Radius=" << currentRadius
+                              << ", HAngle=" << currentHorizontalAngle << "°"
+                              << ", VAngle=" << currentVerticalAngle << "°"
+                              << ", Offset=(" << offset.x << "," << offset.y << "," << offset.z << ")"
+                              << ", CameraPos=(" << cameraPos.x << "," << cameraPos.y << "," << cameraPos.z << ")"
+                              << ", LookDir=(" << lookDir.x << "," << lookDir.y << "," << lookDir.z << ")" << std::endl;
+                    lastStageIndex = currentStageIndex;
+                    lastDebugTime = showcaseTime;
+                }
+            }
+        } else if (m_cameraOrbitMode) {
             // orbit mode: 1/4 circle movement around target
             float currentAngle;
             
@@ -828,11 +1130,20 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
                 }
                 currentAngle = glm::mix(currentFishAngle, 90.f, progress);
             } else {
-                // normal orbit for fish
+                // normal orbit: support full 360° rotation with looping
                 float t = 0.f;
                 if (m_cameraOrbitDuration > 0.f) {
-                    t = m_currentTime / m_cameraOrbitDuration;
-                    t = std::max(0.f, std::min(1.f, t));  // clamp to [0, 1]
+                    // use modulo to support continuous looping for full 360° orbits
+                    float angleRange = m_cameraOrbitEndAngle - m_cameraOrbitStartAngle;
+                    if (angleRange >= 360.f - 0.1f) {
+                        // full circle or more: loop continuously
+                        t = std::fmod(m_currentTime / m_cameraOrbitDuration, 1.f);
+                        if (t < 0.f) t += 1.f;  // handle negative modulo
+                    } else {
+                        // partial circle: clamp to [0, 1]
+                        t = m_currentTime / m_cameraOrbitDuration;
+                        t = std::max(0.f, std::min(1.f, t));
+                    }
                 }
                 currentAngle = glm::mix(m_cameraOrbitStartAngle, m_cameraOrbitEndAngle, t);
             }
@@ -889,13 +1200,14 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
             ? glm::normalize(targetPos - cameraPos)
             : glm::normalize(-offset);
 
-        // once pullback finishes, freeze camera
-        if (m_cameraPullbackFinished && !m_cameraHoldAfterPullback) {
+        // once pullback finishes, freeze camera (but not in showcase mode)
+        if (m_cameraPullbackFinished && !m_cameraHoldAfterPullback && !m_cameraShowcaseMode) {
             m_cameraHoldAfterPullback = true;
             m_cameraHoldPos = cameraPos;
             m_cameraHoldLook = lookDir;
         }
-        if (m_cameraHoldAfterPullback) {
+        // don't freeze camera in showcase mode
+        if (m_cameraHoldAfterPullback && !m_cameraShowcaseMode) {
             cameraPos = m_cameraHoldPos;
             lookDir = m_cameraHoldLook;
         }

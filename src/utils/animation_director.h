@@ -66,6 +66,8 @@ public:
     // preset scene animations
     // setup default titan and fish animations
     void setupTitanFishAnimation();
+    // setup static animation (no movement, camera stays still)
+    void setupStaticAnimation();
     
     // time control
     void update(float deltaSec);
@@ -186,6 +188,19 @@ private:
     float m_cameraOrbitEndAngle = 90.f;
     float m_cameraOrbitDuration = 10.f;
     glm::vec3 m_cameraOrbitVerticalOffset = glm::vec3(0.f, 0.f, 0.f);
+    // multi-stage camera showcase mode (for static objects)
+    bool m_cameraShowcaseMode = false;
+    struct CameraStage {
+        float startTime = 0.f;
+        float duration = 0.f;
+        float startRadius = 5.f;
+        float endRadius = 5.f;
+        float startHorizontalAngle = 0.f;
+        float endHorizontalAngle = 0.f;
+        float startVerticalAngle = 0.f;  // pitch: -90 (down) to +90 (up)
+        float endVerticalAngle = 0.f;
+    };
+    std::vector<CameraStage> m_cameraStages;
     // smooth handoff when fish is eaten -> blend camera toward titan side view
     bool m_cameraSwitchActive = false;
     float m_cameraSwitchStartTime = -1.f;
