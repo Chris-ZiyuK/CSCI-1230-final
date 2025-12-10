@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     MainWindow w;
     w.initialize();
-    w.resize(800, 600);
+    w.resize(1280, 720);  // 16:9 宽高比 (1280x720)
     w.show();
 
     int return_val = a.exec();

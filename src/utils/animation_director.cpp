@@ -284,7 +284,7 @@ void AnimationDirector::setupStaticAnimation() {
         // duration=0 means loop the full animation duration
         // speed=0.6 means play at 60% speed (slower)
         // pingPong=true means play forward then backward for smooth looping
-        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.5f, true);
+        setGLBAnimation(titanMeshfile, 0.0f, 0.0f, 0, true, true, 0.4f, true);
         std::cout << "[Animation] Titan GLB animation: speed=0.6x, ping-pong mode enabled for smooth looping" << std::endl;
     }
     
@@ -293,14 +293,14 @@ void AnimationDirector::setupStaticAnimation() {
         m_fishIndex = fishIndex;
         m_fishMeshfile = fishMeshfile;
         // fish glb animation: swimming animation (only rotation/scale, no translation)
-        setGLBAnimation(fishMeshfile, 0.0f, 0.0f, 0, true, true);
+        setGLBAnimation(fishMeshfile, 0.0f, 0.0f, 0, true, true, 0.7f);
         std::cout << "[Animation] Fish GLB animation enabled" << std::endl;
     }
     
     // ensure everything is visible at start
     resetVisibility();
     
-    // setup multi-stage camera showcase animation (total ~60 seconds)
+    // setup multi-stage camera showcase animation (total ~80 seconds)
     if (titanIndex != SIZE_MAX) {
         m_cameraTargetIndex = titanIndex;
         m_cameraFollowTarget = true;
@@ -313,10 +313,10 @@ void AnimationDirector::setupStaticAnimation() {
         m_cameraPullbackFinished = false;
         m_cameraPullbackActive = false;
         
-        // stage A (0-15s): horizontal 360° rotation
+        // stage A (0-20s): horizontal 360° rotation
         CameraStage stageA;
         stageA.startTime = 0.f;
-        stageA.duration = 15.f;
+        stageA.duration = 20.f;
         stageA.startRadius = 8.f;
         stageA.endRadius = 8.f;
         stageA.startHorizontalAngle = 0.f;
@@ -324,21 +324,21 @@ void AnimationDirector::setupStaticAnimation() {
         stageA.startVerticalAngle = 0.f;
         stageA.endVerticalAngle = 0.f;
         
-        // stage B (15-30s): vertical tilt orbit (from below to above)
+        // stage B (20-40s): vertical tilt orbit (from below to above)
         CameraStage stageB;
-        stageB.startTime = 15.f;
-        stageB.duration = 15.f;
+        stageB.startTime = 20.f;
+        stageB.duration = 20.f;
         stageB.startRadius = 8.f;
         stageB.endRadius = 8.f;
-        stageB.startHorizontalAngle = 45.f;  // start from 45° (diagonal view)
-        stageB.endHorizontalAngle = 135.f;   // rotate to 135° while tilting
-        stageB.startVerticalAngle = -30.f;   // start from below
-        stageB.endVerticalAngle = 30.f;      // end above
+        stageB.startHorizontalAngle = 0.f;  // 从0°开始（与stageA的360°等价），确保平滑过渡
+        stageB.endHorizontalAngle = 135.f;   // 旋转到135°同时倾斜
+        stageB.startVerticalAngle = 0.f;     // 从0°开始，与stageA的end值匹配
+        stageB.endVerticalAngle = 30.f;      // 结束在上方
         
-        // stage C (30-45s): push in + rotate (zoom in while rotating)
+        // stage C (40-60s): push in + rotate (zoom in while rotating)
         CameraStage stageC;
-        stageC.startTime = 30.f;
-        stageC.duration = 15.f;
+        stageC.startTime = 40.f;
+        stageC.duration = 20.f;
         stageC.startRadius = 8.f;
         stageC.endRadius = 4.f;  // zoom in
         stageC.startHorizontalAngle = 135.f;  // continue from stage B
@@ -346,10 +346,10 @@ void AnimationDirector::setupStaticAnimation() {
         stageC.startVerticalAngle = 30.f;      // start from above (continue from stage B)
         stageC.endVerticalAngle = -15.f;       // tilt down while zooming in
         
-        // stage D (45-60s): pull back + top view (zoom out with top angle)
+        // stage D (60-80s): pull back + top view (zoom out with top angle)
         CameraStage stageD;
-        stageD.startTime = 45.f;
-        stageD.duration = 15.f;
+        stageD.startTime = 60.f;
+        stageD.duration = 20.f;
         stageD.startRadius = 4.f;
         stageD.endRadius = 10.f;  // zoom out
         stageD.startHorizontalAngle = 225.f;  // continue from stage C
@@ -360,7 +360,7 @@ void AnimationDirector::setupStaticAnimation() {
         m_cameraStages = {stageA, stageB, stageC, stageD};
         m_cameraOrbitVerticalOffset = glm::vec3(0.f, 2.f, 0.f);
         
-        std::cout << "[Animation] Camera setup: multi-stage showcase for titan (60s total)" << std::endl;
+        std::cout << "[Animation] Camera setup: multi-stage showcase for titan (80s total)" << std::endl;
     } else if (fishIndex != SIZE_MAX) {
         m_cameraTargetIndex = fishIndex;
         m_cameraFollowTarget = true;
@@ -373,10 +373,10 @@ void AnimationDirector::setupStaticAnimation() {
         m_cameraPullbackFinished = false;
         m_cameraPullbackActive = false;
         
-        // stage A (0-15s): horizontal 360° rotation
+        // stage A (0-20s): horizontal 360° rotation
         CameraStage stageA;
         stageA.startTime = 0.f;
-        stageA.duration = 15.f;
+        stageA.duration = 20.f;
         stageA.startRadius = 6.f;
         stageA.endRadius = 6.f;
         stageA.startHorizontalAngle = 0.f;
@@ -384,21 +384,21 @@ void AnimationDirector::setupStaticAnimation() {
         stageA.startVerticalAngle = 0.f;
         stageA.endVerticalAngle = 0.f;
         
-        // stage B (15-30s): vertical tilt orbit
+        // stage B (20-40s): vertical tilt orbit
         CameraStage stageB;
-        stageB.startTime = 15.f;
-        stageB.duration = 15.f;
+        stageB.startTime = 20.f;
+        stageB.duration = 20.f;
         stageB.startRadius = 6.f;
         stageB.endRadius = 6.f;
-        stageB.startHorizontalAngle = 45.f;  // start from diagonal
-        stageB.endHorizontalAngle = 135.f;   // rotate while tilting
-        stageB.startVerticalAngle = -20.f;   // start from below
-        stageB.endVerticalAngle = 20.f;      // end above
+        stageB.startHorizontalAngle = 0.f;  // 从0°开始（与stageA的360°等价），确保平滑过渡
+        stageB.endHorizontalAngle = 135.f;   // 旋转同时倾斜
+        stageB.startVerticalAngle = 0.f;     // 从0°开始，与stageA的end值匹配
+        stageB.endVerticalAngle = 20.f;      // 结束在上方
         
-        // stage C (30-45s): push in + rotate
+        // stage C (40-60s): push in + rotate
         CameraStage stageC;
-        stageC.startTime = 30.f;
-        stageC.duration = 15.f;
+        stageC.startTime = 40.f;
+        stageC.duration = 20.f;
         stageC.startRadius = 6.f;
         stageC.endRadius = 3.f;  // zoom in more for smaller fish
         stageC.startHorizontalAngle = 135.f;  // continue from stage B
@@ -406,10 +406,10 @@ void AnimationDirector::setupStaticAnimation() {
         stageC.startVerticalAngle = 20.f;     // start from above (continue from stage B)
         stageC.endVerticalAngle = -10.f;      // tilt down while zooming in
         
-        // stage D (45-60s): pull back + top view
+        // stage D (60-80s): pull back + top view
         CameraStage stageD;
-        stageD.startTime = 45.f;
-        stageD.duration = 15.f;
+        stageD.startTime = 60.f;
+        stageD.duration = 20.f;
         stageD.startRadius = 3.f;
         stageD.endRadius = 8.f;
         stageD.startHorizontalAngle = 225.f;  // continue from stage C
@@ -420,7 +420,7 @@ void AnimationDirector::setupStaticAnimation() {
         m_cameraStages = {stageA, stageB, stageC, stageD};
         m_cameraOrbitVerticalOffset = glm::vec3(0.f, 1.f, 0.f);
         
-        std::cout << "[Animation] Camera setup: multi-stage showcase for fish (60s total)" << std::endl;
+        std::cout << "[Animation] Camera setup: multi-stage showcase for fish (80s total)" << std::endl;
     } else {
         // no titan or fish found, no camera movement
         std::cout << "[Animation] Static animation setup: no movement, camera stays still" << std::endl;
@@ -1033,8 +1033,8 @@ std::pair<glm::vec3, glm::vec3> AnimationDirector::getCameraTransform() const {
         
         if (m_cameraShowcaseMode && !m_cameraStages.empty()) {
             // multi-stage showcase mode: find current stage and interpolate
-            float showcaseTime = std::fmod(m_currentTime, 60.f);  // loop every 60 seconds
-            if (showcaseTime < 0.f) showcaseTime += 60.f;
+            float showcaseTime = std::fmod(m_currentTime, 80.f);  // loop every 80 seconds
+            if (showcaseTime < 0.f) showcaseTime += 80.f;
             
             // find current stage
             const CameraStage* currentStage = nullptr;

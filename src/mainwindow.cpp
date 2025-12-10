@@ -14,7 +14,7 @@
 void MainWindow::initialize() {
     realtime = new Realtime;
     aspectRatioWidget = new AspectRatioWidget(this);
-    aspectRatioWidget->setAspectWidget(realtime, 3.f/4.f);
+    aspectRatioWidget->setAspectWidget(realtime, 9.f/16.f);  // 16:9 电影感宽高比
     QHBoxLayout *hLayout = new QHBoxLayout; // horizontal alignment
     QVBoxLayout *vLayout = new QVBoxLayout(); // vertical alignment
     vLayout->setAlignment(Qt::AlignTop);
